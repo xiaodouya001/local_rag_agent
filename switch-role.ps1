@@ -1,25 +1,22 @@
-# Cursor角色切换脚本
-# 使用方法: .\switch-role.ps1 -Role <角色名称>
+﻿# Cursor角色切换脚本
+# 使用方法: .\switch-role.ps1 <角色名称>
 # 可用角色: dev, review, architect, tester, docs, devops
+# 
+# 功能说明：
+# - 自动备份当前的 .cursorrules 文件
+# - 从 cursor-roles/ 目录读取角色文件并复制为 .cursorrules
+# - 显示切换结果和提示信息
 
 param(
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$true, Position=0)]
     [ValidateSet("dev", "review", "architect", "tester", "docs", "devops")]
     [string]$Role
 )
 
-$rulesFile = ".cursorrules"
-
-if (-not (Test-Path $rulesFile)) {
-    Write-Host "错误: 找不到 .cursorrules 文件" -ForegroundColor Red
-    exit 1
-}
-
+$currentFile = ".cursorrules"
 $backupFile = ".cursorrules.backup"
-
-# 创建备份
-Copy-Item $rulesFile $backupFile -Force | Out-Null
-Write-Host "已备份当前配置到 $backupFile" -ForegroundColor Gray
+$rolesDir = "cursor-roles"
+$targetFile = Join-Path $rolesDir "$Role.md"
 
 # 角色名称映射
 $roleNames = @{
@@ -35,34 +32,56 @@ $targetRoleName = $roleNames[$Role]
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  切换到角色: $targetRoleName" -ForegroundColor Green
+Write-Host "  Cursor角色切换工具" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "提示:" -ForegroundColor Yellow
-Write-Host "  1. 请打开 .cursorrules 文件" -ForegroundColor White
-Write-Host "  2. 注释掉当前的 'ACTIVE ROLE' 部分" -ForegroundColor White
-Write-Host "  3. 取消注释 '$targetRoleName' 对应的角色定义" -ForegroundColor White
-Write-Host "  4. 保存文件后，Cursor会自动识别新角色" -ForegroundColor White
-Write-Host ""
-Write-Host "详细说明请查看: docs/CURSOR_ROLES_GUIDE.md" -ForegroundColor Gray
-Write-Host ""
 
-# 如果文件存在，尝试自动切换（基础版本）
-$content = Get-Content $rulesFile -Raw -Encoding UTF8
-$originalContent = $content
-
-# 简单的提示：在文件中查找角色定义位置
-if ($content -match "# 角色定义：") {
-    Write-Host "✓ 已在 .cursorrules 文件中找到角色定义" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "请手动编辑文件，将以下内容：" -ForegroundColor Yellow
-    Write-Host "  # ACTIVE ROLE: Python全栈AI工程师（当前激活）" -ForegroundColor White
-    Write-Host "修改为：" -ForegroundColor Yellow
-    Write-Host "  # ACTIVE ROLE: $targetRoleName（当前激活）" -ForegroundColor Green
-} else {
-    Write-Host "⚠ 未能在文件中找到标准角色标记" -ForegroundColor Yellow
+# 检查角色目录是否存在
+if (-not (Test-Path $rolesDir)) {
+    Write-Host "错误: 找不到角色目录 $rolesDir" -ForegroundColor Red
+    Write-Host "请确保在项目根目录运行此脚本" -ForegroundColor Yellow
+    exit 1
 }
 
-Write-Host ""
-Write-Host "备份文件: $backupFile" -ForegroundColor Gray
-Write-Host "如需恢复，请运行: Copy-Item $backupFile $rulesFile -Force" -ForegroundColor Gray
+# 检查目标角色文件是否存在
+if (-not (Test-Path $targetFile)) {
+    Write-Host "错误: 找不到角色文件 $targetFile" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "可用角色文件:" -ForegroundColor Yellow
+    Get-ChildItem -Path $rolesDir -Filter "*.md" | ForEach-Object {
+        $roleKey = $_.BaseName
+        if ($roleNames.ContainsKey($roleKey)) {
+            Write-Host "  $roleKey - $($roleNames[$roleKey])" -ForegroundColor White
+        }
+    }
+    Write-Host ""
+    exit 1
+}
+
+# 备份当前文件（如果存在）
+if (Test-Path $currentFile) {
+    Copy-Item $currentFile $backupFile -Force | Out-Null
+    Write-Host "✓ 已备份当前配置到 $backupFile" -ForegroundColor Gray
+} else {
+    Write-Host "⚠ 当前 .cursorrules 文件不存在，跳过备份" -ForegroundColor Yellow
+}
+
+# 复制目标角色文件为 .cursorrules
+try {
+    Copy-Item $targetFile $currentFile -Force
+    Write-Host "✓ 已切换到角色: $targetRoleName" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "下一步操作:" -ForegroundColor Yellow
+    Write-Host "  1. 保存文件（如果已打开）" -ForegroundColor White
+    Write-Host "  2. 在Cursor中按 Ctrl+Shift+P，输入 'Reload Window' 重新加载窗口" -ForegroundColor White
+    Write-Host "  3. 或者在Cursor中问一个问题验证角色是否切换成功" -ForegroundColor White
+    Write-Host ""
+    Write-Host "验证命令: 在Cursor中问 '请介绍一下你的角色'" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "备份文件: $backupFile" -ForegroundColor Gray
+    Write-Host "如需恢复，请运行: Copy-Item $backupFile $currentFile -Force" -ForegroundColor Gray
+    Write-Host ""
+} catch {
+    Write-Host "错误: 切换失败 - $($_.Exception.Message)" -ForegroundColor Red
+    exit 1
+}

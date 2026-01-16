@@ -44,3 +44,7 @@ chroma_db/
 # 操作系统
 .DS_Store
 Thumbs.db
+
+# .cursorrules
+.cursorrules
+.cursorrules.backup
