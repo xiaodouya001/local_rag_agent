@@ -78,7 +78,6 @@ def check_api_key() -> bool:
         ui.print_info("请在 .env 文件中设置你的 DeepSeek API 密钥")
         ui.print_info("或者设置环境变量:")
         ui.print_info("  PowerShell: $env:DEEPSEEK_API_KEY='your-api-key'")
-        ui.print_info("  Linux/Mac:  export DEEPSEEK_API_KEY='your-api-key'")
         logger.error("未找到 DEEPSEEK_API_KEY")
         return False
     return True

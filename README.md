@@ -160,12 +160,6 @@ cd local_rag_agent
 .\setup_venv.ps1
 ```
 
-**Linux/Mac:**
-
-```bash
-chmod +x setup_venv.sh
-./setup_venv.sh
-```
 
 脚本会自动：
 - ✅ 检测 Python 3.12
@@ -182,8 +176,6 @@ python3.12 -m venv venv
 # 激活虚拟环境
 # Windows
 .\venv\Scripts\Activate.ps1
-# Linux/Mac
-source venv/bin/activate
 
 # 安装依赖
 pip install -r requirements.txt
@@ -447,8 +439,7 @@ local_rag_agent/
 │   ├── config.toml
 │   └── translations/
 ├── requirements.txt              # Python 依赖
-├── setup_venv.ps1               # Windows 设置脚本
-├── setup_venv.sh                # Linux/Mac 设置脚本
+├── setup_venv.ps1                # Windows 设置脚本
 ├── chainlit.md                   # Chainlit 欢迎页面
 └── README.md                     # 本文件
 ```
@@ -471,7 +462,6 @@ local_rag_agent/
 ```bash
 # 激活虚拟环境
 .\venv\Scripts\Activate.ps1  # Windows
-source venv/bin/activate      # Linux/Mac
 
 # 安装开发依赖（如果有）
 pip install -r requirements-dev.txt

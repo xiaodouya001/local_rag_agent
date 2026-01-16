@@ -33,7 +33,11 @@ python-dotenv>=1.0.0,<2.0.0
 colorama>=0.4.6,<1.0.0
 
 # Chainlit - 专为 LLM 聊天应用设计，界面类似 ChatGPT（推荐）
+# 注意：Chainlit 与 Pydantic 2.10.2+ 存在兼容性问题
+# 需要将 Pydantic 版本限制在 2.10.1 或更早版本
+# 参考：https://github.com/Chainlit/chainlit/issues/1544
 chainlit>=1.0.0,<2.0.0
+pydantic>=2.0.0,<=2.10.1
 
 # 注意：openai 包是 langchain-openai 的依赖，会自动安装
 # 如果需要显式安装，可以使用：openai>=1.12.0,<2.0.0
