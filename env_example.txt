@@ -1,0 +1,9 @@
+# DeepSeek API配置
+# 复制此文件为 .env 并填入你的API密钥
+
+DEEPSEEK_API_KEY=sk-92c7e20a3d49421b835a582ff57b9676
+
+# 可选配置
+# DEEPSEEK_API_BASE=https://api.deepseek.com/v1
+# EMBEDDING_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+# LLM_MODEL=deepseek-chat
