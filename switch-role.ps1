@@ -1,6 +1,6 @@
 ﻿# Cursor角色切换脚本
 # 使用方法: .\switch-role.ps1 <角色名称>
-# 可用角色: dev, review, architect, tester, docs, devops
+# 可用角色: dev, review, architect, tester, docs, devops, prompt
 # 
 # 功能说明：
 # - 自动备份当前的 .cursorrules 文件
@@ -9,7 +9,7 @@
 
 param(
     [Parameter(Mandatory=$true, Position=0)]
-    [ValidateSet("dev", "review", "architect", "tester", "docs", "devops")]
+    [ValidateSet("dev", "review", "architect", "tester", "docs", "devops", "prompt")]
     [string]$Role
 )
 
@@ -26,6 +26,7 @@ $roleNames = @{
     "tester" = "测试专家"
     "docs" = "文档工程师"
     "devops" = "DevOps工程师"
+    "prompt" = "资深 Prompt 开发专家"
 }
 
 $targetRoleName = $roleNames[$Role]

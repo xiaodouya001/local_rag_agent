@@ -1,54 +1,39 @@
 """
-RAG (Retrieval-Augmented Generation) Agent
+RAG (Retrieval-Augmented Generation) Agent - 重构版本
 基于检索增强生成的AI智能体
+核心逻辑与UI/业务逻辑分离
 """
 
-import os
-import pickle
-import re
-import time
+import logging
 from typing import List, Optional, Dict, Any
-from pathlib import Path
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import PyPDFLoader, TextLoader, DirectoryLoader
-from langchain_community.vectorstores import FAISS
+
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
-from dotenv import load_dotenv
+from langchain_core.documents import Document
+# LangChainException 不再需要，错误处理由工具类完成
 
-# 尝试导入 UI 模块，如果失败则使用简单的 print
-try:
-    from ui import ui
-    HAS_UI = True
-except ImportError:
-    HAS_UI = False
-    # 创建一个简单的 UI 占位符
-    class SimpleUI:
-        @staticmethod
-        def print_step(num, text, icon=None):
-            print(f"\n[步骤 {num}] {text}")
-            print("-" * 70)
-        @staticmethod
-        def print_document_block(index, content, max_length=300):
-            preview = content[:max_length] + ("..." if len(content) > max_length else "")
-            print(f"\n文档块 {index}:")
-            print(f"长度: {len(content)} 字符")
-            print(preview)
-        @staticmethod
-        def print_box(content, title=None, color='cyan'):
-            if title:
-                print(f"\n{title}:")
-            print(content)
-    ui = SimpleUI()
+from app.config import RAGConfig
+from app.exceptions import (
+    ConfigurationError,
+    DocumentLoadError,
+    VectorStoreError,
+    ModelLoadError
+)
+from app.utils import validate_api_key
 
-load_dotenv()
+# 核心模块
+from app.core import (
+    DocumentLoader,
+    TextSplitter,
+    VectorStoreManager,
+    Retriever,
+    LLMWrapper,
+    QAChainBuilder
+)
+from app.core.utils import ErrorHandler, RetryHandler
 
 
 class RAGAgent:
-    """RAG Agent主类，负责文档加载、向量化和检索生成"""
+    """RAG Agent主类，负责协调各个核心组件"""
     
     def __init__(
         self,
@@ -57,330 +42,342 @@ class RAGAgent:
         llm_model: str = "deepseek-chat",
         chunk_size: int = 1000,
         chunk_overlap: int = 200,
-        base_url: str = None,
-        api_key: str = None
+        base_url: Optional[str] = None,
+        api_key: Optional[str] = None,
+        config: Optional[RAGConfig] = None,
+        logger: Optional[logging.Logger] = None
     ):
         """
         初始化RAG Agent
         
         Args:
             persist_directory: 向量数据库持久化目录
-            embedding_model: 嵌入模型名称（使用HuggingFace模型）
-            llm_model: 大语言模型名称（DeepSeek模型）
+            embedding_model: 嵌入模型名称
+            llm_model: 大语言模型名称
             chunk_size: 文档分块大小
             chunk_overlap: 文档分块重叠大小
             base_url: DeepSeek API基础URL
             api_key: DeepSeek API密钥
+            config: 配置对象（如果提供，将覆盖其他参数）
+            logger: 日志记录器（如果未提供，将使用默认的 logger）
+            
+        Raises:
+            ConfigurationError: 配置错误
+            ModelLoadError: 模型加载失败
         """
-        self.persist_directory = persist_directory
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
+        # 初始化 logger
+        if logger is None:
+            logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+        self.logger = logger
         
-        # 初始化嵌入模型（使用本地HuggingFace模型）
-        print(f"正在加载嵌入模型: {embedding_model}")
-        print("提示: 首次运行需要下载模型，可能需要一些时间...")
+        # 使用配置对象或创建新配置
+        if config:
+            self.config = config
+        else:
+            try:
+                self.config = RAGConfig(
+                    persist_directory=persist_directory,
+                    embedding_model=embedding_model,
+                    llm_model=llm_model,
+                    chunk_size=chunk_size,
+                    chunk_overlap=chunk_overlap,
+                    base_url=base_url,
+                    api_key=api_key
+                )
+            except ValueError as e:
+                raise ConfigurationError(str(e)) from e
+        
+        # 验证 API 密钥格式
+        if not validate_api_key(self.config.api_key):
+            raise ConfigurationError("API 密钥格式无效")
+        
+        # 初始化嵌入模型
+        self.logger.info(f"正在加载嵌入模型: {self.config.embedding_model}")
         try:
             self.embeddings = HuggingFaceEmbeddings(
-                model_name=embedding_model,
+                model_name=self.config.embedding_model,
                 model_kwargs={'device': 'cpu'}
             )
+            self.logger.info("嵌入模型加载成功")
         except Exception as e:
-            print(f"加载嵌入模型失败: {e}")
-            print("提示: 可能是网络连接问题，请检查网络或稍后重试")
-            raise
+            error_msg = f"加载嵌入模型失败: {e}"
+            self.logger.error(error_msg, exc_info=True)
+            raise ModelLoadError(error_msg) from e
         
-        # 初始化LLM（DeepSeek）
-        base_url = base_url or os.getenv("DEEPSEEK_API_BASE", "https://api.deepseek.com/v1")
-        api_key = api_key or os.getenv("DEEPSEEK_API_KEY")
-        
-        if not api_key:
-            raise ValueError("未找到DEEPSEEK_API_KEY，请在.env文件中设置")
-        
-        print(f"正在初始化DeepSeek LLM: {llm_model}")
-        print("提示: 免费版API有速率限制，如遇到429错误请稍后重试")
-        try:
-            self.llm = ChatOpenAI(
-                model=llm_model,
-                base_url=base_url,
-                api_key=api_key,
-                temperature=0.7,
-                max_tokens=2000,
-                timeout=60,  # 设置超时时间
-                max_retries=3  # 添加重试机制
-            )
-        except Exception as e:
-            print(f"初始化LLM失败: {e}")
-            print("提示: 请检查 API 密钥和网络连接")
-            print("注意: 免费版API可能需要验证账户，请前往 https://platform.deepseek.com/ 检查账户状态")
-            raise
-        
-        # 初始化文本分割器
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
-            length_function=len,
+        # 初始化核心组件
+        self._document_loader = DocumentLoader(
+            supported_file_types=self.config.supported_file_types,
+            logger=self.logger
+        )
+        self._text_splitter = TextSplitter(
+            chunk_size=self.config.chunk_size,
+            chunk_overlap=self.config.chunk_overlap,
+            logger=self.logger
+        )
+        self._vector_store_manager = VectorStoreManager(
+            persist_directory=self.config.persist_directory,
+            embeddings=self.embeddings,
+            logger=self.logger
+        )
+        self._llm_wrapper = LLMWrapper(
+            model=self.config.llm_model,
+            base_url=self.config.base_url,
+            api_key=self.config.api_key,
+            temperature=self.config.temperature,
+            max_tokens=self.config.max_tokens,
+            timeout=self.config.timeout,
+            max_retries=self.config.max_retries,
+            logger=self.logger
         )
         
-        # 向量存储
-        self.vectorstore: Optional[FAISS] = None
-        self.qa_chain = None
-        self.retriever = None
+        # 工具类
+        self._error_handler = ErrorHandler(
+            logger=self.logger,
+            api_key=self.config.api_key
+        )
+        self._retry_handler = RetryHandler(
+            max_retries=self.config.max_retries,
+            retry_wait_base=self.config.retry_wait_base,
+            logger=self.logger
+        )
         
-    def load_documents(self, directory: str, file_types: List[str] = None) -> List:
+        # 延迟初始化的组件
+        self._retriever: Optional[Retriever] = None
+        self._qa_chain_builder: Optional[QAChainBuilder] = None
+    
+    # 向后兼容的属性
+    @property
+    def retriever(self):
+        """向后兼容：获取检索器（langchain retriever）"""
+        if self._retriever is None:
+            return None
+        return self._retriever._langchain_retriever
+    
+    @property
+    def qa_chain(self):
+        """向后兼容：获取问答链"""
+        if self._qa_chain_builder is None:
+            return None
+        return self._qa_chain_builder.qa_chain
+    
+    @property
+    def vectorstore(self):
+        """向后兼容：获取向量存储"""
+        return self._vector_store_manager.vectorstore
+    
+    def load_documents(
+        self,
+        directory: str,
+        file_types: Optional[List[str]] = None
+    ) -> List[Document]:
         """
         从目录加载文档
         
         Args:
             directory: 文档目录路径
-            file_types: 支持的文件类型，默认为['.pdf', '.txt']
+            file_types: 支持的文件类型，默认为配置中的值
             
         Returns:
             加载的文档列表
+            
+        Raises:
+            DocumentLoadError: 文档加载失败
         """
-        if file_types is None:
-            file_types = ['.pdf', '.txt']
-        
-        documents = []
-        directory_path = Path(directory)
-        
-        if not directory_path.exists():
-            raise ValueError(f"目录不存在: {directory}")
-        
-        # 加载PDF文件
-        if '.pdf' in file_types:
-            pdf_loader = DirectoryLoader(
-                directory,
-                glob="**/*.pdf",
-                loader_cls=PyPDFLoader
-            )
-            documents.extend(pdf_loader.load())
-        
-        # 加载TXT文件
-        if '.txt' in file_types:
-            txt_loader = DirectoryLoader(
-                directory,
-                glob="**/*.txt",
-                loader_cls=TextLoader,
-                loader_kwargs={"encoding": "utf-8"}
-            )
-            try:
-                documents.extend(txt_loader.load())
-            except Exception as e:
-                print(f"警告: 加载TXT文件时出错: {e}")
-                # 尝试使用其他编码
-                try:
-                    txt_loader_utf8 = DirectoryLoader(
-                        directory,
-                        glob="**/*.txt",
-                        loader_cls=TextLoader,
-                        loader_kwargs={"encoding": "utf-8-sig"}
-                    )
-                    documents.extend(txt_loader_utf8.load())
-                except Exception as e2:
-                    print(f"错误: 无法加载TXT文件: {e2}")
-        
-        print(f"已加载 {len(documents)} 个文档")
-        return documents
+        return self._document_loader.load_from_directory(directory, file_types)
     
-    def create_vectorstore(self, documents: List, collection_name: str = "rag_collection"):
+    def create_vectorstore(
+        self,
+        documents: List[Document],
+        collection_name: str = "rag_collection"
+    ) -> None:
         """
         创建向量存储
         
         Args:
             documents: 文档列表
             collection_name: 集合名称
+            
+        Raises:
+            VectorStoreError: 向量存储创建失败
         """
-        if not documents:
-            raise ValueError("文档列表为空")
-        
         # 分割文档
-        print("正在分割文档...")
-        texts = self.text_splitter.split_documents(documents)
-        print(f"文档已分割为 {len(texts)} 个块")
+        text_chunks = self._text_splitter.split_documents(documents)
         
         # 创建向量存储
-        print("正在创建向量存储...")
-        self.vectorstore = FAISS.from_documents(
-            documents=texts,
-            embedding=self.embeddings
-        )
-        # 保存向量存储
-        self.vectorstore.save_local(self.persist_directory)
-        print(f"向量存储已创建并保存到: {self.persist_directory}")
+        self._vector_store_manager.create(text_chunks, collection_name)
         
-    def load_vectorstore(self, collection_name: str = "rag_collection"):
+        # 初始化检索器和问答链构建器
+        self._initialize_retriever_and_qa_chain(collection_name)
+    
+    def load_vectorstore(self, collection_name: str = "rag_collection") -> None:
         """
         加载已存在的向量存储
         
         Args:
-            collection_name: 集合名称（保留参数以兼容旧代码）
+            collection_name: 集合名称
+            
+        Raises:
+            VectorStoreError: 向量存储加载失败
         """
-        if not os.path.exists(self.persist_directory):
-            raise ValueError(f"向量存储目录不存在: {self.persist_directory}")
-        
-        print(f"正在从 {self.persist_directory} 加载向量存储...")
-        self.vectorstore = FAISS.load_local(
-            self.persist_directory,
-            self.embeddings,
-            allow_dangerous_deserialization=True
-        )
-        print("向量存储加载完成")
+        self._vector_store_manager.load(collection_name)
+        self._initialize_retriever_and_qa_chain(collection_name)
     
-    def create_qa_chain(self, k: int = 4):
+    def _initialize_retriever_and_qa_chain(self, collection_name: str) -> None:
+        """初始化检索器和问答链"""
+        if self._vector_store_manager.vectorstore is None:
+            raise VectorStoreError("向量存储未初始化")
+        
+        # 创建检索器
+        self._retriever = Retriever(
+            vectorstore=self._vector_store_manager.vectorstore,
+            k=self.config.default_k,
+            logger=self.logger
+        )
+        
+        # 创建问答链构建器
+        self._qa_chain_builder = QAChainBuilder(
+            llm=self._llm_wrapper.llm,
+            retriever=self._retriever,
+            logger=self.logger
+        )
+        self._qa_chain_builder.build()
+    
+    def create_qa_chain(self, k: Optional[int] = None) -> None:
         """
         创建问答链
         
         Args:
-            k: 检索的文档块数量
+            k: 检索的文档块数量（默认使用配置值）
+            
+        Raises:
+            ValueError: 向量存储未初始化
         """
-        if self.vectorstore is None:
+        if self._vector_store_manager.vectorstore is None:
             raise ValueError("向量存储未初始化，请先创建或加载向量存储")
         
-        # 创建检索器
-        retriever = self.vectorstore.as_retriever(
-            search_type="similarity",
-            search_kwargs={"k": k}
-        )
+        k = k or self.config.default_k
         
-        # 创建提示模板
-        prompt_template = """基于以下上下文信息回答问题。如果你不知道答案，就说不知道，不要编造答案。
-
-上下文信息:
-{context}
-
-问题: {question}
-
-请提供详细、准确的回答:"""
+        if self._retriever is None:
+            self._retriever = Retriever(
+                vectorstore=self._vector_store_manager.vectorstore,
+                k=k,
+                logger=self.logger
+            )
+        else:
+            self._retriever.update_k(k)
         
-        PROMPT = PromptTemplate(
-            template=prompt_template,
-            input_variables=["context", "question"]
-        )
-        
-        # 创建QA链（使用新版本API）
-        def format_docs(docs):
-            return "\n\n".join(doc.page_content for doc in docs)
-        
-        self.retriever = retriever
-        self.qa_chain = (
-            {"context": retriever | format_docs, "question": RunnablePassthrough()}
-            | PROMPT
-            | self.llm
-            | StrOutputParser()
-        )
-        print("问答链创建完成")
+        if self._qa_chain_builder is None:
+            self._qa_chain_builder = QAChainBuilder(
+                llm=self._llm_wrapper.llm,
+                retriever=self._retriever,
+                logger=self.logger
+            )
+        self._qa_chain_builder.build()
     
-    def query(self, question: str, max_retries: int = 3) -> Dict[str, Any]:
+    def query(self, question: str, max_retries: Optional[int] = None) -> Dict[str, Any]:
         """
-        查询问题（支持自动重试，适用于免费版API的速率限制）
+        查询问题（支持自动重试）
         
         Args:
             question: 用户问题
-            max_retries: 最大重试次数（默认3次）
+            max_retries: 最大重试次数（默认使用配置值）
             
         Returns:
             包含答案和源文档的字典
+            
+        Raises:
+            ValueError: 问答链未初始化
         """
-        if self.qa_chain is None or self.retriever is None:
+        if self._qa_chain_builder is None or self._retriever is None:
             raise ValueError("问答链未初始化，请先创建问答链")
         
-        print(f"正在处理问题: {question}")
+        self.logger.info(f"正在处理问题: {question}")
         
-        # 重试机制，特别处理速率限制错误
-        for attempt in range(max_retries):
-            try:
-                # 获取相关文档（使用新版本API）
-                source_documents = self.retriever.invoke(question)
-                # 获取答案
-                answer = self.qa_chain.invoke(question)
-                
+        # 使用重试处理器执行查询
+        def _execute_query():
+            # 检索相关文档
+            source_documents = self._retriever.retrieve(question)
+            
+            if not source_documents:
+                self.logger.warning(f"检索器没有找到任何相关文档（问题: {question}）")
                 return {
-                    "answer": answer,
-                    "source_documents": source_documents
+                    "answer": "抱歉，我在向量存储中没有找到相关的文档信息。请确保：\n1. 向量存储已正确创建并包含文档\n2. 问题与文档内容相关\n3. 如果是从 FAISS 迁移到 ChromaDB，请删除旧的向量存储并重新创建。",
+                    "source_documents": []
                 }
-                
-            except Exception as e:
-                error_str = str(e)
-                error_msg = self._parse_error_message(error_str)
-                
-                # 如果是速率限制错误（429），等待后重试
-                if "429" in error_str or "rate limit" in error_str.lower():
-                    if attempt < max_retries - 1:
-                        wait_time = (attempt + 1) * 2  # 递增等待时间：2秒、4秒、6秒
-                        print(f"遇到速率限制，等待 {wait_time} 秒后重试... (尝试 {attempt + 1}/{max_retries})")
-                        time.sleep(wait_time)
-                        continue
-                    else:
-                        print(f"错误: {error_msg}")
-                        return {
-                            "answer": f"抱歉，API请求频率过高。免费版API有速率限制（约5次/秒），请稍后再试。\n\n详细错误: {error_msg}",
-                            "source_documents": []
-                        }
-                else:
-                    # 其他错误，不重试
-                    print(f"错误: {error_msg}")
-                    return {
-                        "answer": f"抱歉，处理问题时出现错误: {error_msg}",
-                        "source_documents": []
-                    }
+            
+            # 获取答案
+            answer = self._qa_chain_builder.invoke(question)
+            
+            self.logger.info("查询成功")
+            return {
+                "answer": answer,
+                "source_documents": source_documents
+            }
         
-        # 如果所有重试都失败了
-        return {
-            "answer": "抱歉，多次重试后仍然失败，请检查网络连接和API密钥状态。",
-            "source_documents": []
-        }
+        # 使用错误分类器
+        def error_classifier(e: Exception) -> str:
+            return self._error_handler.classify_error(e)
+        
+        # 执行查询（带重试）
+        max_retries = max_retries or self.config.max_retries
+        original_max_retries = self._retry_handler.max_retries
+        self._retry_handler.max_retries = max_retries
+        
+        try:
+            try:
+                return self._retry_handler.retry_with_backoff(
+                    _execute_query,
+                    error_classifier=error_classifier
+                )
+            except Exception as e:
+                # 处理不同类型的错误
+                error_type = self._error_handler.classify_error(e)
+                error_msg = self._error_handler.parse_error(e)
+                
+                if error_type == "rate_limit":
+                    error_msg = "API请求频率过高。免费版API有速率限制（约5次/秒），请稍后再试。"
+                elif error_type == "timeout":
+                    error_msg = "API请求超时，请检查网络连接后重试。"
+                elif error_type == "auth":
+                    error_msg = f"抱歉，认证失败: {error_msg}"
+                elif error_type == "balance":
+                    error_msg = f"抱歉，账户余额不足: {error_msg}"
+                else:
+                    error_msg = f"抱歉，处理问题时出现错误: {error_msg}"
+                
+                self.logger.error(f"查询失败: {error_msg}", exc_info=True)
+                return {
+                    "answer": error_msg,
+                    "source_documents": []
+                }
+        finally:
+            self._retry_handler.max_retries = original_max_retries
     
-    def _parse_error_message(self, error_str: str) -> str:
+    def get_similar_documents(self, query: str, k: int = 4) -> List[Document]:
         """
-        解析错误信息，提供更友好的提示
+        获取相似文档
         
         Args:
-            error_str: 原始错误信息
+            query: 查询文本
+            k: 返回的文档数量
             
         Returns:
-            友好的错误提示
-        """
-        error_str_lower = error_str.lower()
-        
-        # API 余额不足
-        if "insufficient balance" in error_str_lower or "402" in error_str:
-            return "API 账户余额不足。请前往 DeepSeek 官网充值后重试。"
-        
-        # API 密钥错误
-        if "401" in error_str or "unauthorized" in error_str_lower or "invalid api key" in error_str_lower:
-            return "API 密钥无效或已过期。请检查 .env 文件中的 DEEPSEEK_API_KEY 是否正确。"
-        
-        # 网络连接问题
-        if "timeout" in error_str_lower or "connection" in error_str_lower:
-            return "网络连接超时。请检查网络连接后重试。"
-        
-        # 速率限制
-        if "rate limit" in error_str_lower or "429" in error_str:
-            return "API 请求频率过高（免费版限制约5次/秒）。程序会自动重试，请稍候。"
-        
-        # 模型不可用
-        if "model" in error_str_lower and ("not found" in error_str_lower or "unavailable" in error_str_lower):
-            return "指定的模型不可用。请检查模型名称是否正确。"
-        
-        # 其他错误，返回原始错误信息但更简洁
-        if "error code:" in error_str:
-            # 提取错误代码和主要信息
-            import re
-            code_match = re.search(r'error code:\s*(\d+)', error_str, re.IGNORECASE)
-            message_match = re.search(r"'message':\s*'([^']+)'", error_str)
+            相似文档列表
             
-            if code_match and message_match:
-                code = code_match.group(1)
-                message = message_match.group(1)
-                return f"API 错误 (代码 {code}): {message}"
+        Raises:
+            ValueError: 向量存储未初始化
+        """
+        if self._vector_store_manager.vectorstore is None:
+            raise ValueError("向量存储未初始化")
         
-        # 默认返回原始错误，但截断过长的错误信息
-        if len(error_str) > 200:
-            return error_str[:200] + "..."
-        
-        return error_str
+        return self._vector_store_manager.vectorstore.similarity_search(query, k=k)
     
-    def query_with_debug(self, question: str, show_context: bool = True) -> Dict[str, Any]:
+    # 向后兼容的方法（用于调试模式）
+    def query_with_debug(
+        self,
+        question: str,
+        show_context: bool = True
+    ) -> Dict[str, Any]:
         """
         查询问题（调试模式，显示检索到的文档和提示内容）
         
@@ -390,60 +387,49 @@ class RAGAgent:
             
         Returns:
             包含答案、源文档和调试信息的字典
+            
+        Raises:
+            ValueError: 问答链未初始化
         """
-        if self.qa_chain is None or self.retriever is None:
+        if self._qa_chain_builder is None or self._retriever is None:
             raise ValueError("问答链未初始化，请先创建问答链")
         
-        print(f"\n{'='*60}")
-        print(f"问题: {question}")
-        print(f"{'='*60}\n")
+        self.logger.debug(f"调试模式查询: {question}")
         
-        # 步骤 1: 检索相关文档
-        print("【步骤 1】检索相关文档（本地完成，不使用 DeepSeek API）:")
-        print("-" * 60)
-        source_documents = self.retriever.invoke(question)
-        print(f"检索到 {len(source_documents)} 个相关文档块\n")
-        
-        if show_context:
-            for i, doc in enumerate(source_documents, 1):
-                print(f"文档块 {i} (长度: {len(doc.page_content)} 字符):")
-                content_preview = doc.page_content[:300] + ("..." if len(doc.page_content) > 300 else "")
-                print(f"  {content_preview}\n")
-        
-        # 步骤 2: 构建提示
-        print("\n【步骤 2】构建发送给 DeepSeek API 的提示:")
-        print("-" * 60)
-        context = "\n\n".join(doc.page_content for doc in source_documents)
-        prompt_preview = f"""基于以下上下文信息回答问题。如果你不知道答案，就说不知道，不要编造答案。
-
-上下文信息:
-{context[:500]}{'...' if len(context) > 500 else ''}
-
-问题: {question}
-
-请提供详细、准确的回答:"""
-        print(prompt_preview)
-        print(f"\n提示总长度: {len(context)} 字符")
-        
-        # 步骤 3: 调用 DeepSeek API
-        print("\n【步骤 3】调用 DeepSeek API 生成回答:")
-        print("-" * 60)
-        print("正在调用 DeepSeek API...")
-        
+        # 检索相关文档
         try:
-            answer = self.qa_chain.invoke(question)
-            if HAS_UI:
-                ui.print_progress_done()
-                ui.print_success("DeepSeek API 调用成功")
-            else:
-                print("✓ DeepSeek API 调用成功\n")
+            source_documents = self._retriever.retrieve(question)
+            
+            if show_context:
+                for i, doc in enumerate(source_documents, 1):
+                    self.logger.info(f"文档块 {i} (长度: {len(doc.page_content)} 字符)")
+                    content_preview = (
+                        doc.page_content[:300] + "..."
+                        if len(doc.page_content) > 300
+                        else doc.page_content
+                    )
+                    self.logger.debug(f"文档块 {i} 内容预览: {content_preview}")
+        except Exception as e:
+            error_msg = f"检索失败: {e}"
+            self.logger.error(error_msg, exc_info=True)
+            return {
+                "answer": f"检索失败: {error_msg}",
+                "source_documents": [],
+                "debug_info": {"error": str(e)}
+            }
+        
+        # 构建提示预览
+        context = "\n\n".join(doc.page_content for doc in source_documents)
+        self.logger.info(f"提示总长度: {len(context)} 字符")
+        
+        # 调用问答链
+        try:
+            answer = self._qa_chain_builder.invoke(question)
+            self.logger.info("DeepSeek API 调用成功")
         except Exception as e:
             error_str = str(e)
-            error_msg = self._parse_error_message(error_str)
-            if HAS_UI:
-                ui.print_error(f"DeepSeek API 调用失败: {error_msg}")
-            else:
-                print(f"✗ DeepSeek API 调用失败: {error_msg}\n")
+            error_msg = self._error_handler.parse_error(e)
+            self.logger.error(f"DeepSeek API 调用失败: {error_msg}", exc_info=True)
             return {
                 "answer": f"抱歉，处理问题时出现错误: {error_msg}",
                 "source_documents": source_documents,
@@ -454,56 +440,6 @@ class RAGAgent:
                 }
             }
         
-        # 步骤 4: 对比分析
-        if HAS_UI:
-            ui.print_section("对比分析", icon='brain')
-            if source_documents:
-                ui.print_box(
-                    source_documents[0].page_content[:200] + "..." if len(source_documents[0].page_content) > 200 else source_documents[0].page_content,
-                    title="原始文档内容（检索到的）",
-                    color='cyan'
-                )
-            ui.print_box(
-                answer[:200] + "..." if len(answer) > 200 else answer,
-                title="DeepSeek 生成的回答",
-                color='green'
-            )
-            
-            # 计算相似度（简单对比）
-            if source_documents:
-                original_text = source_documents[0].page_content.lower()
-                answer_lower = answer.lower()
-                # 简单的关键词重叠分析
-                original_words = set(original_text.split())
-                answer_words = set(answer_lower.split())
-                common_words = original_words & answer_words
-                similarity = len(common_words) / max(len(original_words), len(answer_words)) * 100
-                ui.print_info(f"关键词重叠度: {similarity:.1f}%")
-                ui.print_info("（这只是一个简单的指标，DeepSeek 会重新组织和表述内容）")
-        else:
-            print("【步骤 4】对比分析:")
-            print("-" * 60)
-            print("原始文档内容（检索到的）:")
-            if source_documents:
-                original_preview = source_documents[0].page_content[:200]
-                print(f"  {original_preview}...")
-            print()
-            print("DeepSeek 生成的回答:")
-            print(f"  {answer[:200]}...")
-            print()
-            
-            # 计算相似度（简单对比）
-            if source_documents:
-                original_text = source_documents[0].page_content.lower()
-                answer_lower = answer.lower()
-                # 简单的关键词重叠分析
-                original_words = set(original_text.split())
-                answer_words = set(answer_lower.split())
-                common_words = original_words & answer_words
-                similarity = len(common_words) / max(len(original_words), len(answer_words)) * 100
-                print(f"关键词重叠度: {similarity:.1f}%")
-                print("（这只是一个简单的指标，DeepSeek 会重新组织和表述内容）")
-        
         return {
             "answer": answer,
             "source_documents": source_documents,
@@ -513,20 +449,3 @@ class RAGAgent:
                 "answer_length": len(answer)
             }
         }
-    
-    def get_similar_documents(self, query: str, k: int = 4) -> List:
-        """
-        获取相似文档
-        
-        Args:
-            query: 查询文本
-            k: 返回的文档数量
-            
-        Returns:
-            相似文档列表
-        """
-        if self.vectorstore is None:
-            raise ValueError("向量存储未初始化")
-        
-        docs = self.vectorstore.similarity_search(query, k=k)
-        return docs

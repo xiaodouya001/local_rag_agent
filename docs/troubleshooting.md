@@ -176,7 +176,7 @@ txt_loader = DirectoryLoader(
 
 **解决方案**:
 - 使用 Python 3.12（推荐）
-- 参考 `INSTALL_PYTHON312.md` 安装 Python 3.12
+- 参考 `install-python312.md` 安装 Python 3.12
 
 ### 9. 依赖安装失败
 

@@ -62,6 +62,9 @@
 
 # 切换到DevOps工程师
 .\switch-role.ps1 devops
+
+# 切换到 Prompt 开发专家
+.\switch-role.ps1 prompt
 ```
 
 ### 文件结构说明
@@ -78,7 +81,8 @@
 │   ├── architect.md          # 架构师
 │   ├── tester.md             # 测试专家
 │   ├── docs.md               # 文档工程师
-│   └── devops.md             # DevOps工程师
+│   ├── devops.md             # DevOps工程师
+│   └── prompt.md             # 资深 Prompt 开发专家
 └── switch-role.ps1            # 角色切换脚本
 ```
 
@@ -321,6 +325,15 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
      - 部署脚本
      - 监控配置
 
+7. **资深 Prompt 开发专家**
+   - 适用于：Prompt 工程、LLM 应用开发、Prompt 优化
+   - 使用场景：
+     - 设计和优化 Prompt 模板
+     - RAG 系统中的 Prompt 开发
+     - 针对不同 LLM 的 Prompt 优化
+     - Prompt 测试和效果评估
+     - Prompt 模板化和参数化设计
+
 ---
 
 ## 实际使用场景示例
@@ -391,6 +404,18 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
    - 环境变量配置
    - 部署最佳实践
 
+### 场景7：Prompt 开发
+
+**步骤：**
+1. 切换到"资深 Prompt 开发专家"角色
+2. 在Cursor中提问：`请帮我设计一个用于 RAG 系统的问答 Prompt，要求能够准确引用文档来源`
+3. AI会从 Prompt 开发专家的角度，提供：
+   - 结构化的 Prompt 模板
+   - 清晰的指令和约束条件
+   - 输出格式要求
+   - Prompt 优化建议
+   - 测试和评估方法
+
 ---
 
 ## 快速切换脚本
@@ -411,6 +436,7 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 - `tester` - 测试专家
 - `docs` - 文档工程师
 - `devops` - DevOps工程师
+- `prompt` - 资深 Prompt 开发专家
 
 **脚本功能：**
 - ✅ 自动备份当前的 `.cursorrules` 文件

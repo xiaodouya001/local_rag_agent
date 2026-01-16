@@ -12,7 +12,7 @@
 4. **重要：勾选 "Add Python 3.12 to PATH"** ✅
 5. 点击 "Install Now"
 
-详细安装说明请参考：[INSTALL_PYTHON312.md](INSTALL_PYTHON312.md)
+详细安装说明请参考：[install-python312.md](install-python312.md)
 
 ### 步骤 2: 运行自动设置脚本
 

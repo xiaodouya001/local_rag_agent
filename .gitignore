@@ -4,9 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
-venv/
-ENV/
 build/
 develop-eggs/
 dist/
@@ -19,32 +16,97 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# 环境变量
-.env
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+venv.bak/
+venv-old/
 
-# 向量数据库
-chroma_db/
-*.db
-*.sqlite
-
-# 文档目录（可选，如果不想提交文档）
-# documents/
-
-# IDE
-.vscode/
+# PyCharm
 .idea/
+*.iml
+*.iws
+.idea_modules/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# RAG Agent specific
+chroma_db/
+temp_documents/
+*.faiss
+*.pkl
+*.index
+
+# Chainlit
+.chainlit/
+chainlit.md
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*_old.py
+*_backup.py
+rag_agent_old.py
+
+# Test coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Documentation build
+docs/_build/
+docs/.doctrees/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
 *.swp
 *.swo
 *~
 
-# 操作系统
-.DS_Store
-Thumbs.db
+# Package files
+*.whl
+*.tar.gz
 
-# .cursorrules
+# Cursor
 .cursorrules
-.cursorrules.backup
+.cursor

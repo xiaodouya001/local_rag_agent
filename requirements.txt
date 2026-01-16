@@ -1,15 +1,36 @@
 # RAG Agent Dependencies (DeepSeek版本)
-langchain>=0.3.0
-langchain-community>=0.3.0
-langchain-openai>=0.2.0
-langchain-huggingface>=0.1.0
-openai>=1.12.0
-sentence-transformers>=2.3.0
-pypdf2>=3.0.0
-python-dotenv>=1.0.0
-tiktoken>=0.5.0
-faiss-cpu>=1.13.0
-torch>=2.0.0
-transformers>=4.30.0
-huggingface-hub>=0.34.0,<1.0
-colorama>=0.4.6
+# 注意：版本范围使用 >=min,<next_major 格式，避免重大版本更新导致的兼容性问题
+
+# LangChain 核心库
+langchain>=0.3.0,<0.4.0
+langchain-community>=0.3.0,<0.4.0
+langchain-text-splitters>=0.3.0,<0.4.0
+# 注意：langchain-openai 提供了通用的 ChatOpenAI 接口，兼容 OpenAI API 格式
+# DeepSeek API 兼容 OpenAI 格式，所以可以使用 ChatOpenAI 类
+# 只需要设置 base_url 指向 DeepSeek 的 API 端点即可
+langchain-openai>=0.2.0,<0.3.0
+langchain-huggingface>=0.1.0,<0.2.0
+langchain-chroma>=0.1.0,<0.2.0
+
+# 向量数据库
+chromadb>=0.4.0,<0.5.0
+
+# 嵌入模型（本地）
+sentence-transformers>=2.3.0,<3.0.0
+transformers>=4.30.0,<5.0.0
+huggingface-hub>=0.34.0,<1.0.0
+torch>=2.0.0,<3.0.0
+
+# 文档处理
+pypdf2>=3.0.0,<4.0.0
+tiktoken>=0.5.0,<1.0.0
+
+# 工具库
+python-dotenv>=1.0.0,<2.0.0
+colorama>=0.4.6,<1.0.0
+
+# Chainlit - 专为 LLM 聊天应用设计，界面类似 ChatGPT（推荐）
+chainlit>=1.0.0,<2.0.0
+
+# 注意：openai 包是 langchain-openai 的依赖，会自动安装
+# 如果需要显式安装，可以使用：openai>=1.12.0,<2.0.0
