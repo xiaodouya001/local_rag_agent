@@ -15,7 +15,7 @@ def example_usage():
     # 1. 初始化RAG Agent
     agent = RAGAgent(
         persist_directory="./chroma_db",
-        embedding_model="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        embedding_model="all-MiniLM-L6-v2",
         llm_model="deepseek-chat",
         chunk_size=1000,
         chunk_overlap=200
