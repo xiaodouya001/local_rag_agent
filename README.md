@@ -164,11 +164,6 @@ sequenceDiagram
 (Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
 ```
 
-**macOS/Linux:**
-
-```bash
-curl -sSL https://install.python-poetry.org | python3 -
-```
 
 安装完成后，将 Poetry 添加到 PATH（或重启终端）。
 
@@ -198,10 +193,6 @@ cd local_rag_agent
 Copy-Item .env.example .env
 ```
 
-**macOS/Linux:**
-```bash
-cp .env.example .env
-```
 
 编辑 `.env` 文件，设置你的 DeepSeek API 密钥：
 
