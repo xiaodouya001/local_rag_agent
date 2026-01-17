@@ -543,7 +543,7 @@ A: 完全支持。项目使用 UTF-8 编码，支持中文文档和问答。
 
 如有问题或建议，请通过以下方式联系：
 
-- 提交 [Issue](https://github.com/your-repo/issues)
+- 提交 [Issue](https://github.com/xiaodouya001/local_rag_agent/issues)
 - 发送邮件至 [zhangmin04144@gmail.com]
 
 ---
