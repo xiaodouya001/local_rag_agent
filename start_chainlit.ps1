@@ -90,7 +90,7 @@ $Ready = $false
 # 实时显示日志并监控启动状态
 while (-not $Ready -and ((Get-Date) - $StartTime).TotalSeconds -lt $MaxWaitTime) {
     Start-Sleep -Milliseconds 500
-    
+
     # 检查端口是否可访问（使用TCP连接，完全静默）
     try {
         $TcpClient = New-Object System.Net.Sockets.TcpClient
@@ -108,7 +108,7 @@ while (-not $Ready -and ((Get-Date) - $StartTime).TotalSeconds -lt $MaxWaitTime)
         } else {
             $TcpClient.Close()
         }
-        
+
         if ($PortOpen -and -not $Ready) {
             # 端口可访问，再检查应用日志确认初始化完成
             if (Test-Path $RagAgentLogFile) {
@@ -116,7 +116,7 @@ while (-not $Ready -and ((Get-Date) - $StartTime).TotalSeconds -lt $MaxWaitTime)
                 if ($RagLogContent) {
                     foreach ($line in $RagLogContent) {
                         # 检查多种可能的初始化完成标志
-                        if ($line -match "步骤 5/5.*RAG Agent 初始化完成" -or 
+                        if ($line -match "步骤 5/5.*RAG Agent 初始化完成" -or
                             $line -match "RAG Agent 初始化完成" -or
                             $line -match "问答链创建完成" -or
                             $line -match "✅.*步骤 5/5") {
@@ -135,10 +135,10 @@ while (-not $Ready -and ((Get-Date) - $StartTime).TotalSeconds -lt $MaxWaitTime)
     } catch {
         # 端口未就绪，继续等待（静默忽略错误）
     }
-    
+
     # 检查应用日志（rag_agent.log）和错误日志
     $LogContent = @()
-    
+
     # 读取应用日志（主要日志来源）
     if (Test-Path $RagAgentLogFile) {
         $RagLogContent = Get-Content $RagAgentLogFile -Tail 30 -ErrorAction SilentlyContinue
@@ -146,7 +146,7 @@ while (-not $Ready -and ((Get-Date) - $StartTime).TotalSeconds -lt $MaxWaitTime)
             $LogContent = @($LogContent) + @($RagLogContent)
         }
     }
-    
+
     # 读取错误日志（如果有）
     if (Test-Path $ErrorLogFile) {
         $ErrorContent = Get-Content $ErrorLogFile -Tail 20 -ErrorAction SilentlyContinue
@@ -154,12 +154,12 @@ while (-not $Ready -and ((Get-Date) - $StartTime).TotalSeconds -lt $MaxWaitTime)
             $LogContent = @($LogContent) + @($ErrorContent)
         }
     }
-    
+
     if ($LogContent) {
         # 检查是否就绪
         foreach ($line in $LogContent) {
             # 首先检查rag_agent.log中的特定格式
-            if ($line -match "步骤 5/5.*RAG Agent 初始化完成" -or 
+            if ($line -match "步骤 5/5.*RAG Agent 初始化完成" -or
                 $line -match "✅.*步骤 5/5" -or
                 $line -match "问答链创建完成") {
                 if (-not $Ready) {
@@ -169,7 +169,7 @@ while (-not $Ready -and ((Get-Date) - $StartTime).TotalSeconds -lt $MaxWaitTime)
                     break
                 }
             }
-            
+
             # 然后检查其他关键词
             foreach ($keyword in $ReadyKeywords) {
                 if ($line -match [regex]::Escape($keyword)) {
@@ -183,7 +183,7 @@ while (-not $Ready -and ((Get-Date) - $StartTime).TotalSeconds -lt $MaxWaitTime)
             }
             if ($Ready) { break }
         }
-        
+
         # 检查是否有错误
         foreach ($line in $LogContent) {
             foreach ($keyword in $ErrorKeywords) {
@@ -196,7 +196,7 @@ while (-not $Ready -and ((Get-Date) - $StartTime).TotalSeconds -lt $MaxWaitTime)
             }
         }
     }
-    
+
     # 检查进程是否还在运行
     if ($ChainlitProcess.HasExited) {
         Write-Host ""
@@ -207,7 +207,7 @@ while (-not $Ready -and ((Get-Date) - $StartTime).TotalSeconds -lt $MaxWaitTime)
         }
         exit 1
     }
-    
+
     # 显示等待动画（避免重复显示）
     if (-not $Ready) {
         $Elapsed = [int]((Get-Date) - $StartTime).TotalSeconds
@@ -239,10 +239,10 @@ if ($Ready) {
     Write-Host "══════════════════════════════════════════════════════════════" -ForegroundColor Green
     Write-Host ""
     Write-Host ""
-    
+
     # 等待一小段时间确保服务完全就绪
     Start-Sleep -Seconds 1
-    
+
     # 等待进程结束
     try {
         $ChainlitProcess.WaitForExit()
@@ -255,18 +255,18 @@ if ($Ready) {
     Write-Host "⚠️  警告: 在 $MaxWaitTime 秒内未检测到就绪标志" -ForegroundColor Yellow
     Write-Host "   但服务可能已经启动，正在打开浏览器..." -ForegroundColor Yellow
     Write-Host ""
-    
+
     # 即使没检测到就绪标志，也尝试打开浏览器
     $Url = "http://localhost:$Port"
     Start-Process $Url
-    
+
     Write-Host "   访问地址: $Url" -ForegroundColor Cyan
     Write-Host "   如果页面无法访问，请查看日志: $RagAgentLogFile" -ForegroundColor Yellow
     if (Test-Path $ErrorLogFile) {
         Write-Host "   错误日志: $ErrorLogFile" -ForegroundColor Yellow
     }
     Write-Host ""
-    
+
     # 等待进程结束
     try {
         $ChainlitProcess.WaitForExit()

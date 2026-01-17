@@ -77,18 +77,18 @@ async def startup_initialization():
     在服务器启动时自动运行，避免用户首次访问时等待
     """
     global _startup_complete, _startup_failed
-    
+
     logger.info("")
     logger.info("=" * 60)
     logger.info("🚀 开始启动 RAG Agent 后台服务...")
     logger.info("=" * 60)
-    
+
     # 等待一小段时间，确保服务器基本启动
     await asyncio.sleep(0.5)
-    
+
     # 执行初始化
     success = await initialize_rag_agent()
-    
+
     if success:
         # Banner 已移至 PowerShell 启动脚本，此处不再显示
         _startup_complete = True
@@ -134,7 +134,7 @@ async def initialize_rag_agent() -> bool:
         logger.info("📋 步骤 1/5: 加载配置...")
         config = RAGConfig()
         logger.info(f"   ✓ 配置加载完成 (模型: {config.llm_model}, 嵌入模型: {config.embedding_model})")
-        
+
         logger.info("📦 步骤 2/5: 创建 RAG Agent 实例...")
         rag_agent = RAGAgent(config=config)
         logger.info("   ✓ RAG Agent 实例创建成功")
@@ -218,7 +218,7 @@ async def initialize_rag_agent() -> bool:
         logger.info("🔗 步骤 4/5: 创建问答链...")
         rag_agent.create_qa_chain()
         logger.info("   ✓ 问答链创建成功")
-        
+
         logger.info("✅ 步骤 5/5: RAG Agent 初始化完成！")
         logger.info("=" * 60)
         _startup_complete = True
@@ -413,7 +413,7 @@ async def start():
         # 启动后台初始化任务（如果还没启动）
         if _startup_task is None:
             _startup_task = asyncio.create_task(startup_initialization())
-        
+
         # 等待初始化完成（最多等待30秒）
         for _ in range(60):  # 30秒 = 60 * 0.5秒
             await asyncio.sleep(0.5)
