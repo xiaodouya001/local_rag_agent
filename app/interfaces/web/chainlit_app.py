@@ -42,47 +42,6 @@ project_root_str = str(project_root)
 if project_root_str not in sys.path:
     sys.path.insert(0, project_root_str)
 
-# 将 .chainlit 目录中的 chainlit*.md 文件链接到项目根目录
-# 这样 Chainlit 可以正常读取，同时文件实际存储在 .chainlit 目录中
-chainlit_dir = project_root / ".chainlit"
-chainlit_files = ["chainlit.md", "chainlit_zh.md", "chainlit_zh-CN.md"]
-for filename in chainlit_files:
-    source_file = chainlit_dir / filename
-    target_file = project_root / filename
-    # 如果源文件存在且目标文件不存在，则创建链接或复制
-    if source_file.exists() and not target_file.exists():
-        link_created = False
-        try:
-            # Windows 上尝试创建符号链接（需要管理员权限）
-            if sys.platform == "win32":
-                import subprocess
-                result = subprocess.run(
-                    ["cmd", "/c", "mklink", str(target_file), str(source_file)],
-                    shell=False,
-                    capture_output=True,
-                    text=True
-                )
-                # 检查命令是否成功（返回码为 0）
-                if result.returncode == 0:
-                    link_created = True
-            else:
-                # Linux/Mac 上创建符号链接
-                target_file.symlink_to(source_file)
-                link_created = True
-        except (OSError, subprocess.CalledProcessError, Exception):
-            # 符号链接失败，继续执行复制逻辑
-            pass
-
-        # 如果符号链接失败，则复制文件（作为后备方案）
-        if not link_created:
-            import shutil
-            try:
-                shutil.copy2(source_file, target_file)
-            except Exception as e:
-                # 记录错误但不中断程序
-                import logging
-                logging.warning(f"无法复制 {filename} 到项目根目录: {e}")
-
 # 必须在 sys.path 设置后才能导入 app 模块
 import chainlit as cl  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402

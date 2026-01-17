@@ -233,12 +233,16 @@ RAG_LLM_API_KEY=your-api-key-here
 | `RAG_RETRIEVER_DEFAULT_K` | 默认检索文档块数量 | `10` | ❌ |
 | `RAG_VECTORSTORE_PERSIST_DIRECTORY` | 向量存储目录 | `./chroma_db` | ❌ |
 | `LOG_LEVEL` | 日志级别 | `INFO` | ❌ |
+| `ENABLE_API_DEBUG` | 启用 API 调试日志（详细记录请求/响应） | `false` | ❌ |
+| `ENABLE_SDK_DEBUG` | 启用 SDK 原始调试日志（OpenAI/DeepSeek SDK） | `false` | ❌ |
 | `HF_HUB_DOWNLOAD_TIMEOUT_SECONDS` | HuggingFace 模型下载超时时间（秒） | `120` | ❌ |
 | `HF_HUB_DOWNLOAD_RETRIES` | HuggingFace 模型下载重试次数 | `5` | ❌ |
 
 配置会自动从 `.env` 文件读取，配置优先级：代码参数 > 环境变量 > 默认值。
 
-**注意**：`HF_HUB_DOWNLOAD_TIMEOUT_SECONDS` 和 `HF_HUB_DOWNLOAD_RETRIES` 用于控制 HuggingFace 嵌入模型的下载行为。如果网络较慢或经常超时，可以增加超时时间（如设置为 `300` 表示 5 分钟）。
+**注意**：
+- `HF_HUB_DOWNLOAD_TIMEOUT_SECONDS` 和 `HF_HUB_DOWNLOAD_RETRIES` 用于控制 HuggingFace 嵌入模型的下载行为。如果网络较慢或经常超时，可以增加超时时间（如设置为 `300` 表示 5 分钟）。
+- `ENABLE_API_DEBUG` 和 `ENABLE_SDK_DEBUG` 用于启用详细的调试日志，有助于排查 API 调用和 SDK 相关问题，但会产生大量日志输出。
 
 ## 💻 使用方式
 
@@ -250,7 +254,25 @@ RAG_LLM_API_KEY=your-api-key-here
 poetry run chainlit run app/interfaces/web/chainlit_app.py
 ```
 
-浏览器会自动打开 `http://localhost:8000`。
+默认端口为 8000，浏览器会自动打开 `http://localhost:8000`。
+
+**如果端口被占用**，可以指定其他端口：
+
+```bash
+poetry run chainlit run app/interfaces/web/chainlit_app.py --port 8001
+```
+
+或者通过环境变量设置：
+
+```bash
+# Windows PowerShell
+$env:CHAINLIT_PORT=8001
+poetry run chainlit run app/interfaces/web/chainlit_app.py
+
+# Linux/macOS
+export CHAINLIT_PORT=8001
+poetry run chainlit run app/interfaces/web/chainlit_app.py
+```
 
 **功能**：
 - 智能问答：直接输入问题，基于文档内容回答
@@ -426,6 +448,29 @@ A: 默认存储在 `./chroma_db` 目录。可以通过 `RAG_VECTORSTORE_PERSIST_
 ### Q: 嵌入模型首次下载很慢？
 
 A: 嵌入模型（`all-MiniLM-L6-v2`）首次运行会从 HuggingFace 下载，约 400MB。下载完成后会缓存到本地。
+
+### Q: 启动时提示端口被占用怎么办？
+
+A: 如果遇到端口占用错误（如 `[Errno 10048]`），可以：
+
+1. **使用其他端口启动**：
+   ```bash
+   poetry run chainlit run app/interfaces/web/chainlit_app.py --port 8001
+   ```
+
+2. **查找并关闭占用端口的进程**（Windows）：
+   ```powershell
+   # 查找占用 8000 端口的进程
+   netstat -ano | findstr :8000
+   # 结束进程（将 PID 替换为实际进程 ID）
+   taskkill /PID <PID> /F
+   ```
+
+3. **通过环境变量设置端口**：
+   ```powershell
+   $env:CHAINLIT_PORT=8001
+   poetry run chainlit run app/interfaces/web/chainlit_app.py
+   ```
 
 ### Q: 模型下载超时怎么办？
 

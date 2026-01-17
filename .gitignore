@@ -125,3 +125,6 @@ docs/.doctrees/
 # Cursor
 .cursorrules
 .cursor
+
+# ruff
+.ruff_cache/
