@@ -1,0 +1,143 @@
+[project]
+name = "local-rag-agent"
+version = "1.2.0"
+description = "基于检索增强生成（Retrieval-Augmented Generation）的本地AI Agent，支持文档问答、知识检索和智能对话"
+readme = "README.md"
+license = "MIT"
+authors = [
+    {name = "Xiaodouya001", email = "zhangmin04144@gmail.com"}
+]
+keywords = ["rag", "llm", "langchain", "chromadb", "deepseek"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    # License classifier 已弃用，使用 [project.license] 代替
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.12"
+dynamic = ["dependencies"]  # 依赖由 [tool.poetry.dependencies] 定义
+
+[project.scripts]
+rag-agent = "app.interfaces.cli.main:main"
+
+[tool.poetry]
+# 禁用包模式：这是一个应用项目，不是可安装的包
+# Poetry 将只管理依赖，不会尝试安装当前项目
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+# LangChain 核心库
+langchain = ">=0.3.0,<0.4.0"
+langchain-community = ">=0.3.0,<0.4.0"
+langchain-text-splitters = ">=0.3.0,<0.4.0"
+# 注意：langchain-openai 提供了通用的 ChatOpenAI 接口，兼容 OpenAI API 格式
+# DeepSeek API 兼容 OpenAI 格式，所以可以使用 ChatOpenAI 类
+# 只需要设置 base_url 指向 DeepSeek 的 API 端点即可
+langchain-openai = ">=0.2.0,<0.3.0"
+langchain-huggingface = ">=0.1.0,<0.2.0"
+langchain-chroma = ">=0.1.0,<0.2.0"
+
+# 向量数据库
+# 注意：在 Windows 上，ChromaDB 的依赖 chroma-hnswlib 需要编译
+# 如果安装失败，请安装 Microsoft Visual C++ Build Tools:
+# https://visualstudio.microsoft.com/visual-cpp-build-tools/
+chromadb = ">=0.4.0,<0.5.0"
+
+# 嵌入模型（本地）
+sentence-transformers = ">=2.3.0,<3.0.0"
+transformers = ">=4.30.0,<5.0.0"
+huggingface-hub = ">=0.34.0,<1.0.0"
+torch = ">=2.0.0,<3.0.0"
+
+# 文档处理
+# 注意：pypdf2 已被 pypdf 替代，LangChain 新版本需要 pypdf
+pypdf = ">=3.0.0,<4.0.0"
+tiktoken = ">=0.5.0,<1.0.0"
+
+# 工具库
+python-dotenv = ">=1.0.0,<2.0.0"
+colorama = ">=0.4.6,<1.0.0"
+
+# Chainlit - 专为 LLM 聊天应用设计，界面类似 ChatGPT（推荐）
+# 注意：Chainlit 与 Pydantic 2.10.2+ 存在兼容性问题
+# 需要将 Pydantic 版本限制在 2.10.1 或更早版本
+# 参考：https://github.com/Chainlit/chainlit/issues/1544
+chainlit = ">=1.0.0,<2.0.0"
+pydantic = ">=2.0.0,<=2.10.1"
+pydantic-settings = ">=2.0.0,<3.0.0"
+
+# 注意：openai 包是 langchain-openai 的依赖，会自动安装
+# 如果需要显式安装，可以使用：openai = ">=1.12.0,<2.0.0"
+
+[tool.poetry.group.dev.dependencies]
+# 代码格式化工具（开发依赖）
+yapf = ">=0.40.0,<1.0.0"
+pre-commit = ">=3.6.0,<4.0.0"
+ruff = ">=0.1.0,<1.0.0"
+isort = ">=5.13.0,<6.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+# Ruff 配置文件（与 .ruff.toml 保持一致）
+line-length = 80
+target-version = "py312"
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    "chroma_db",
+    "logs",
+    ".chainlit",
+    "dist",
+    "build",
+    ".eggs",
+    ".idea",
+    ".vscode",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle 错误
+    "W",     # pycodestyle 警告
+    "F",     # Pyflakes
+    # "I",   # isort（导入排序）- 禁用，使用独立的 isort 工具
+    "N",     # pep8-naming
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "C4",    # flake8-comprehensions
+    "SIM",   # flake8-simplify
+]
+ignore = [
+    "E501",  # 行长度（由格式化工具处理）
+    "E203",  # 切片中的空格（与 Black 风格兼容）
+    "E402",  # 模块级导入不在文件顶部（允许在 sys.path 设置后导入）
+    "B904",  # 异常处理中使用 raise ... from（允许简单的 raise）
+    "UP007", # 类型注解使用 X | Y 而不是 Union[X, Y]（允许旧式写法）
+]
+
+[tool.isort]
+profile = "black"
+line_length = 80
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.yapf]
+# YAPF 配置文件（与 .style.yapf 保持一致）
+based_on_style = "google"
+column_limit = 80
+indent_width = 4
+continuation_indent_width = 4
+use_tabs = false

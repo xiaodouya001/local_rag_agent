@@ -27,9 +27,14 @@ MANIFEST
 venv/
 ENV/
 env/
-.venv/
+.venv/                    # Poetry 虚拟环境（项目内）
 venv.bak/
 venv-old/
+
+# Poetry
+# 注意：poetry.lock 应该提交到版本控制，确保依赖版本一致
+# 如果不想提交锁定文件，可以取消下面的注释
+# poetry.lock
 
 # PyCharm
 .idea/
@@ -45,11 +50,12 @@ venv-old/
 .env
 .env.local
 .env.*.local
+# 注意：.env.example 应该提交到版本控制，所以不在这里忽略
 
 # Logs
 logs/
-*.log
-*.log.*
+*.log                    # 包括 rag_agent.log, api_debug.log 等所有日志文件
+*.log.*                   # 轮转后的日志文件（如 .gz 压缩文件）
 
 # RAG Agent specific
 chroma_db/
@@ -59,8 +65,17 @@ temp_documents/
 *.index
 
 # Chainlit
-.chainlit/
-chainlit.md
+# 忽略运行时生成的文件，但保留配置文件
+.chainlit/*.db
+.chainlit/files/
+.chainlit/uploads/
+.chainlit/.cache/
+.chainlit/*.log
+# 注意：.chainlit/config.toml、.chainlit/translations/ 和 .chainlit/chainlit*.md 应该提交到版本控制
+# 根目录的 chainlit*.md 文件是符号链接或自动生成的副本，不应该提交
+chainlit*.md
+# 但 .chainlit 目录中的 chainlit*.md 文件应该提交
+!.chainlit/chainlit*.md
 
 # OS
 .DS_Store

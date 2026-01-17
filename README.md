@@ -1,6 +1,6 @@
 # Local RAG Agent
 
-基于检索增强生成（Retrieval-Augmented Generation）的本地AI智能体，支持文档问答、知识检索和智能对话。
+基于检索增强生成（Retrieval-Augmented Generation）的本地AI Agent，支持文档问答、知识检索和智能对话。
 
 ## 📋 目录
 
@@ -17,41 +17,20 @@
 
 ## 🎯 项目简介
 
-Local RAG Agent 是一个基于 LangChain 和 ChromaDB 构建的本地 RAG（检索增强生成）系统，支持：
+Local RAG Agent 是一个基于 LangChain 和 ChromaDB 构建的本地 RAG（检索增强生成）demo，支持：
 
-- 📄 **文档加载**：支持 PDF、TXT 等多种格式
+- 📄 **文档加载**：支持 PDF、TXT 格式
 - 🔍 **智能检索**：基于向量相似度的语义检索
 - 💬 **问答对话**：基于文档内容的智能问答
 - 🌐 **Web 界面**：基于 Chainlit 的现代化聊天界面
-- 🔧 **灵活配置**：支持环境变量和配置文件
 
 ## ✨ 核心特性
 
-### 文档处理
-- 支持 PDF、TXT 文件格式
-- 自动文档分块和向量化
-- 持久化向量存储（ChromaDB）
-
-### 智能检索
+- 支持 PDF、TXT 文件格式，自动文档分块和向量化
 - 基于 HuggingFace 嵌入模型的语义检索
-- 可配置的检索数量（k 值）
-- 文档块重叠策略优化
-
-### 问答系统
-- 集成 DeepSeek API（兼容 OpenAI 格式）
-- 自动重试和错误处理
-- 支持上下文感知的问答
-
-### 用户界面
-- **CLI 模式**：命令行交互式问答
-- **Web 模式**：基于 Chainlit 的 Web 界面（推荐）
-- 文件上传和实时处理
-
-### 开发特性
-- 模块化架构设计
-- 完善的错误处理和日志系统
-- 类型注解和文档字符串
-- 支持 Python 3.12+
+- 集成 DeepSeek API，自动重试和错误处理
+- 持久化向量存储（ChromaDB）
+- 模块化架构设计，完善的错误处理和日志系统
 
 ## 🏗️ 技术架构
 
@@ -59,51 +38,57 @@ Local RAG Agent 是一个基于 LangChain 和 ChromaDB 构建的本地 RAG（检
 
 ```mermaid
 graph TB
-    A[用户输入] --> B[RAG Agent]
-    B --> C[文档加载器]
-    B --> D[文本分割器]
-    B --> E[向量存储管理器]
-    B --> F[检索器]
-    B --> G[LLM 包装器]
-    B --> H[问答链构建器]
+    subgraph "接口层"
+        UI1[CLI 接口]
+        UI2[Web 接口<br/>Chainlit]
+    end
     
-    C --> I[PDF/TXT 文件]
-    D --> J[文档块]
-    E --> K[ChromaDB]
-    F --> K
-    G --> L[DeepSeek API]
-    H --> F
-    H --> G
+    subgraph "应用层"
+        AGENT[RAG Agent]
+    end
     
-    K --> M[向量检索]
-    M --> F
-    F --> N[相关文档]
-    N --> H
-    H --> O[生成答案]
-    O --> A
-```
-
-### 核心组件
-
-```mermaid
-graph LR
-    A[RAG Agent] --> B[DocumentLoader]
-    A --> C[TextSplitter]
-    A --> D[VectorStoreManager]
-    A --> E[Retriever]
-    A --> F[LLMWrapper]
-    A --> G[QAChainBuilder]
+    subgraph "核心层"
+        LOADER[DocumentLoader<br/>文档加载器]
+        SPLITTER[TextSplitter<br/>文本分割器]
+        VSM[VectorStoreManager<br/>向量存储管理器]
+        RETRIEVER[Retriever<br/>检索器]
+        LLM_WRAPPER[LLMWrapper<br/>LLM 包装器]
+        QA_CHAIN[QAChainBuilder<br/>问答链构建器]
+    end
     
-    A --> H[ErrorHandler]
-    A --> I[RetryHandler]
+    subgraph "基础设施层"
+        CONFIG[RAGConfig<br/>配置管理]
+        ERROR[ErrorHandler<br/>错误处理]
+        RETRY[RetryHandler<br/>重试处理]
+    end
     
-    B --> J[PDF/TXT 文件]
-    C --> K[文档块]
-    D --> L[ChromaDB]
-    E --> L
-    F --> M[DeepSeek API]
-    G --> E
-    G --> F
+    subgraph "外部依赖"
+        CHROMA[ChromaDB<br/>向量数据库]
+        DEEPSEEK[DeepSeek API<br/>大语言模型]
+        HF[HuggingFace<br/>嵌入模型]
+    end
+    
+    UI1 --> AGENT
+    UI2 --> AGENT
+    
+    AGENT --> CONFIG
+    AGENT --> LOADER
+    AGENT --> SPLITTER
+    AGENT --> VSM
+    AGENT --> RETRIEVER
+    AGENT --> LLM_WRAPPER
+    AGENT --> QA_CHAIN
+    AGENT --> ERROR
+    AGENT --> RETRY
+    
+    LOADER --> |PDF/TXT| SPLITTER
+    SPLITTER --> |文档块| VSM
+    VSM --> CHROMA
+    RETRIEVER --> VSM
+    QA_CHAIN --> RETRIEVER
+    QA_CHAIN --> LLM_WRAPPER
+    LLM_WRAPPER --> DEEPSEEK
+    VSM --> HF
 ```
 
 ### 工作流程
@@ -111,29 +96,54 @@ graph LR
 ```mermaid
 sequenceDiagram
     participant User as 用户
+    participant Interface as 接口层<br/>CLI/Web
     participant Agent as RAG Agent
-    participant Loader as 文档加载器
-    participant Splitter as 文本分割器
-    participant VectorDB as 向量数据库
-    participant Retriever as 检索器
-    participant LLM as 大语言模型
+    participant Loader as DocumentLoader
+    participant Splitter as TextSplitter
+    participant VSM as VectorStoreManager
+    participant ChromaDB as ChromaDB
+    participant Retriever as Retriever
+    participant QAChain as QAChainBuilder
+    participant LLM as LLMWrapper
+    participant DeepSeek as DeepSeek API
     
-    User->>Agent: 加载文档
-    Agent->>Loader: 读取文件
+    Note over User,DeepSeek: 初始化阶段
+    User->>Interface: 启动应用
+    Interface->>Agent: 初始化 RAG Agent
+    Agent->>Agent: 加载嵌入模型<br/>初始化核心组件
+    
+    Note over User,DeepSeek: 文档加载阶段
+    User->>Interface: 加载文档
+    Interface->>Agent: load_documents()
+    Agent->>Loader: load_from_directory()
     Loader-->>Agent: 返回文档列表
-    Agent->>Splitter: 分割文档
+    Agent->>Splitter: split_documents()
     Splitter-->>Agent: 返回文档块
-    Agent->>VectorDB: 创建向量存储
-    VectorDB-->>Agent: 存储完成
+    Agent->>VSM: create()
+    VSM->>ChromaDB: 创建向量存储
+    ChromaDB-->>VSM: 存储完成
+    VSM-->>Agent: 向量存储创建成功
+    Agent->>Retriever: 初始化检索器
+    Agent->>QAChain: 初始化问答链
+    QAChain-->>Agent: 问答链创建完成
     
-    User->>Agent: 提问
-    Agent->>Retriever: 检索相关文档
-    Retriever->>VectorDB: 向量相似度搜索
-    VectorDB-->>Retriever: 返回相关文档块
+    Note over User,DeepSeek: 查询阶段
+    User->>Interface: 提问
+    Interface->>Agent: query()
+    Agent->>Retriever: retrieve()
+    Retriever->>VSM: 向量相似度搜索
+    VSM->>ChromaDB: similarity_search()
+    ChromaDB-->>VSM: 返回相关文档块
+    VSM-->>Retriever: 返回文档列表
     Retriever-->>Agent: 返回检索结果
-    Agent->>LLM: 生成答案（带上下文）
-    LLM-->>Agent: 返回答案
-    Agent-->>User: 显示答案和来源
+    Agent->>QAChain: invoke()
+    QAChain->>LLM: 调用 LLM（带上下文）
+    LLM->>DeepSeek: API 请求
+    DeepSeek-->>LLM: 返回答案
+    LLM-->>QAChain: 返回答案
+    QAChain-->>Agent: 返回答案
+    Agent-->>Interface: 返回答案和源文档
+    Interface-->>User: 显示答案和来源
 ```
 
 ## 🚀 快速开始
@@ -141,18 +151,35 @@ sequenceDiagram
 ### 环境要求
 
 - Python 3.12+
+- Poetry（[安装指南](https://python-poetry.org/docs/#installation)）
 - DeepSeek API 密钥（[获取地址](https://platform.deepseek.com/)）
 
 ### 安装步骤
 
-#### 1. 克隆项目
+#### 1. 安装 Poetry
+
+**Windows (PowerShell):**
+
+```powershell
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
+```
+
+**macOS/Linux:**
+
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+安装完成后，将 Poetry 添加到 PATH（或重启终端）。
+
+#### 2. 克隆项目
 
 ```bash
 git clone <repository-url>
 cd local_rag_agent
 ```
 
-#### 2. 运行自动设置脚本（推荐）
+#### 3. 运行自动设置脚本
 
 **Windows (PowerShell):**
 
@@ -160,198 +187,92 @@ cd local_rag_agent
 .\setup_venv.ps1
 ```
 
-
-脚本会自动：
-- ✅ 检测 Python 3.12
-- ✅ 创建虚拟环境
-- ✅ 安装所有依赖
-- ✅ 准备运行环境
-
-#### 3. 手动安装（可选）
-
-```bash
-# 创建虚拟环境
-python3.12 -m venv venv
-
-# 激活虚拟环境
-# Windows
-.\venv\Scripts\Activate.ps1
-
-# 安装依赖
-pip install -r requirements.txt
-```
+脚本会自动检测 Poetry 和 Python 3.12，配置 Poetry 使用项目内虚拟环境，并安装所有依赖。
 
 #### 4. 配置 API 密钥
 
-创建 `.env` 文件（可复制 `app/env_example.txt`）：
+复制示例文件并编辑：
 
-```env
-DEEPSEEK_API_KEY=your-api-key-here
+**Windows (PowerShell):**
+```powershell
+Copy-Item .env.example .env
 ```
 
-可选配置：
+**macOS/Linux:**
+```bash
+cp .env.example .env
+```
+
+编辑 `.env` 文件，设置你的 DeepSeek API 密钥：
 
 ```env
-# API 配置
-DEEPSEEK_API_BASE=https://api.deepseek.com/v1
-
-# 模型配置
-EMBEDDING_MODEL=all-MiniLM-L6-v2
-LLM_MODEL=deepseek-chat
-
-# 文档分块配置
-CHUNK_SIZE=1000
-CHUNK_OVERLAP=200
-
-# LLM 参数
-TEMPERATURE=0.7
-MAX_TOKENS=2000
-API_TIMEOUT=60
-
-# 重试配置
-MAX_RETRIES=3
-
-# 日志配置
-LOG_LEVEL=INFO
+RAG_LLM_API_KEY=your-api-key-here
 ```
 
 #### 5. 添加文档
 
-将你的文档放入 `documents` 目录：
-
-```bash
-documents/
-├── example.txt
-├── document1.pdf
-└── document2.txt
-```
-
-支持的文件格式：
-- PDF (`.pdf`)
-- 文本 (`.txt`)
+将文档放入 `documents` 目录，支持 PDF (`.pdf`) 和文本 (`.txt`) 格式。
 
 ## ⚙️ 配置说明
 
-### 环境变量
+项目使用 `pydantic-settings` 管理配置，所有配置项使用 `RAG_` 前缀，格式为 `RAG_{类别}_{配置项}`。
 
 | 变量名 | 说明 | 默认值 | 必需 |
 |--------|------|--------|------|
-| `DEEPSEEK_API_KEY` | DeepSeek API 密钥 | - | ✅ |
-| `DEEPSEEK_API_BASE` | API 基础 URL | `https://api.deepseek.com/v1` | ❌ |
-| `EMBEDDING_MODEL` | 嵌入模型名称 | `all-MiniLM-L6-v2` | ❌ |
-| `LLM_MODEL` | 大语言模型名称 | `deepseek-chat` | ❌ |
-| `CHUNK_SIZE` | 文档分块大小 | `1000` | ❌ |
-| `CHUNK_OVERLAP` | 文档块重叠大小 | `200` | ❌ |
-| `TEMPERATURE` | LLM 温度参数 | `0.7` | ❌ |
-| `MAX_TOKENS` | 最大生成 token 数 | `2000` | ❌ |
-| `API_TIMEOUT` | API 超时时间（秒） | `60` | ❌ |
-| `MAX_RETRIES` | 最大重试次数 | `3` | ❌ |
+| `RAG_LLM_API_KEY` | DeepSeek API 密钥 | - | ✅ |
+| `RAG_LLM_API_BASE` | LLM API 基础 URL | `https://api.deepseek.com/v1` | ❌ |
+| `RAG_LLM_TEMPERATURE` | LLM 温度参数 | `0.7` | ❌ |
+| `RAG_LLM_MAX_TOKENS` | LLM 最大生成 token 数 | `2000` | ❌ |
+| `RAG_LLM_TIMEOUT` | LLM API 超时时间（秒） | `60` | ❌ |
+| `RAG_LLM_MAX_RETRIES` | LLM API 最大重试次数 | `3` | ❌ |
+| `RAG_LLM_RETRY_WAIT_BASE` | LLM API 重试基础等待时间（秒） | `2` | ❌ |
+| `RAG_EMBEDDING_MODEL` | 嵌入模型名称 | `all-MiniLM-L6-v2` | ❌ |
+| `RAG_LLM_MODEL` | 大语言模型名称 | `deepseek-chat` | ❌ |
+| `RAG_DOCUMENT_CHUNK_SIZE` | 文档分块大小 | `1000` | ❌ |
+| `RAG_DOCUMENT_CHUNK_OVERLAP` | 文档块重叠大小 | `200` | ❌ |
+| `RAG_RETRIEVER_DEFAULT_K` | 默认检索文档块数量 | `10` | ❌ |
+| `RAG_VECTORSTORE_PERSIST_DIRECTORY` | 向量存储目录 | `./chroma_db` | ❌ |
 | `LOG_LEVEL` | 日志级别 | `INFO` | ❌ |
+| `HF_HUB_DOWNLOAD_TIMEOUT_SECONDS` | HuggingFace 模型下载超时时间（秒） | `120` | ❌ |
+| `HF_HUB_DOWNLOAD_RETRIES` | HuggingFace 模型下载重试次数 | `5` | ❌ |
 
-### 配置文件
+配置会自动从 `.env` 文件读取，配置优先级：代码参数 > 环境变量 > 默认值。
 
-也可以通过代码直接配置：
-
-```python
-from app.config import RAGConfig
-from app.rag_agent import RAGAgent
-
-config = RAGConfig(
-    persist_directory="./chroma_db",
-    embedding_model="all-MiniLM-L6-v2",
-    llm_model="deepseek-chat",
-    chunk_size=1000,
-    chunk_overlap=200,
-    api_key="your-api-key"
-)
-
-agent = RAGAgent(config=config)
-```
+**注意**：`HF_HUB_DOWNLOAD_TIMEOUT_SECONDS` 和 `HF_HUB_DOWNLOAD_RETRIES` 用于控制 HuggingFace 嵌入模型的下载行为。如果网络较慢或经常超时，可以增加超时时间（如设置为 `300` 表示 5 分钟）。
 
 ## 💻 使用方式
 
-### 方式一：命令行模式（CLI）
-
-运行主程序：
-
-```bash
-python app/main.py
-```
-
-或：
-
-```bash
-python -m app.main
-```
-
-首次运行会：
-1. 加载嵌入模型（首次下载约 400MB）
-2. 从 `documents` 目录加载文档
-3. 创建向量存储
-4. 进入交互式问答模式
-
-使用示例：
-
-```
-请输入你的问题
-→ 什么是 RAG？
-
-[处理中...]
-
-RAG（Retrieval-Augmented Generation）是一种结合了信息检索和生成式AI的技术...
-
-参考了 3 个文档块
-```
-
-输入 `quit` 或 `exit` 退出。
-
-### 方式二：Web 界面（推荐）
+### Web 界面（推荐）
 
 启动 Chainlit 应用：
 
 ```bash
-chainlit run app/chainlit_app.py
-```
-
-或：
-
-```bash
-chainlit run app/chainlit_app.py -w
+poetry run chainlit run app/interfaces/web/chainlit_app.py
 ```
 
 浏览器会自动打开 `http://localhost:8000`。
 
-#### Web 界面功能
+**功能**：
+- 智能问答：直接输入问题，基于文档内容回答
+- 文件上传：拖拽文件或使用 `/upload` 命令上传文档
+- 来源追踪：显示答案参考的文档块
 
-- 💬 **智能问答**：直接输入问题，基于文档内容回答
-- 📤 **文件上传**：拖拽文件或使用 `/upload` 命令上传文档
-- 📚 **文档管理**：自动处理上传的文档并创建向量存储
-- 🔍 **来源追踪**：显示答案参考的文档块
+### 命令行模式（CLI）
 
-#### 使用示例
+```bash
+poetry run python app/interfaces/cli/main.py
+```
 
-1. **上传文档**：
-   - 拖拽 PDF/TXT 文件到聊天窗口
-   - 或输入 `/upload` 命令选择文件
+首次运行会加载嵌入模型（首次下载约 400MB），从 `documents` 目录加载文档，创建向量存储，然后进入交互式问答模式。输入 `quit` 或 `exit` 退出。
 
-2. **提问**：
-   ```
-   什么是 RAG？
-   文档中提到了哪些技术？
-   如何优化检索效果？
-   ```
-
-3. **查看来源**：
-   答案下方会显示参考的文档块信息
-
-### 方式三：Python API
+### Python API
 
 ```python
-from app.rag_agent import RAGAgent
-from app.config import RAGConfig
+from app.application import RAGAgent
+from app.infrastructure import RAGConfig
 
-# 初始化
-config = RAGConfig.from_env()
+# 初始化（自动从环境变量读取配置）
+config = RAGConfig()
 agent = RAGAgent(config=config)
 
 # 加载文档
@@ -369,78 +290,38 @@ print(result["answer"])
 print(f"参考了 {len(result['source_documents'])} 个文档块")
 ```
 
-### 高级用法
-
-#### 自定义检索数量
-
-```python
-# 创建问答链时指定 k 值
-agent.create_qa_chain(k=6)  # 检索 6 个文档块
-
-# 或查询时临时修改
-result = agent.query("问题", max_retries=5)
-```
-
-#### 获取相似文档
-
-```python
-# 获取与查询最相似的文档
-similar_docs = agent.get_similar_documents("查询文本", k=5)
-for doc in similar_docs:
-    print(doc.page_content)
-```
-
-#### 调试模式
-
-```python
-# 显示检索到的文档和调试信息
-result = agent.query_with_debug("问题", show_context=True)
-print(result["answer"])
-print(result["debug_info"])
-```
-
 ## 📁 项目结构
 
 ```
 local_rag_agent/
 ├── app/                          # 应用主目录
-│   ├── __init__.py
-│   ├── main.py                   # CLI 入口
-│   ├── chainlit_app.py           # Chainlit Web 应用
-│   ├── rag_agent.py              # RAG Agent 主类
-│   ├── config.py                 # 配置管理
-│   ├── exceptions.py             # 自定义异常
-│   ├── logging_config.py          # 日志配置
-│   ├── ui.py                     # CLI UI 工具
-│   ├── utils.py                  # 工具函数
-│   └── core/                     # 核心模块
-│       ├── __init__.py
-│       ├── document_loader.py    # 文档加载器
-│       ├── text_splitter.py      # 文本分割器
-│       ├── vector_store.py       # 向量存储管理
-│       ├── retriever.py         # 检索器
-│       ├── llm_wrapper.py       # LLM 包装器
-│       ├── qa_chain.py           # 问答链构建器
-│       └── utils/                # 工具类
-│           ├── error_handler.py  # 错误处理
-│           └── retry_handler.py  # 重试处理
+│   ├── __init__.py               # 包初始化（向后兼容导入）
+│   ├── infrastructure/           # 基础设施层
+│   │   ├── config.py             # 配置管理（RAGConfig）
+│   │   ├── exceptions.py         # 自定义异常类
+│   │   └── logging_config.py     # 日志配置
+│   ├── core/                     # 核心层（领域逻辑）
+│   │   ├── document_loader.py    # 文档加载器
+│   │   ├── text_splitter.py      # 文本分割器
+│   │   ├── vector_store.py       # 向量存储管理
+│   │   ├── retriever.py          # 检索器
+│   │   ├── llm_wrapper.py        # LLM 包装器
+│   │   ├── qa_chain.py           # 问答链构建器
+│   │   └── utils/                # 核心工具类
+│   ├── application/              # 应用层（应用服务）
+│   │   └── rag_agent.py         # RAG Agent 主类
+│   ├── interfaces/               # 接口层（应用入口）
+│   │   ├── cli/                  # CLI 接口
+│   │   └── web/                  # Web 接口
+│   └── example/                  # 示例模块
 ├── documents/                    # 文档目录
-│   ├── example.txt
-│   └── ...
-├── chroma_db/                    # 向量数据库（自动创建）
-├── logs/                         # 日志目录（自动创建）
-├── docs/                         # 文档目录
-│   ├── quickstart.md
-│   ├── troubleshooting.md
-│   └── ...
+├── docs/                         # 项目文档
+├── cursor-roles/                 # Cursor AI 角色定义
 ├── test/                         # 测试目录
-│   └── test_rag_workflow.py
 ├── .chainlit/                    # Chainlit 配置
-│   ├── config.toml
-│   └── translations/
-├── requirements.txt              # Python 依赖
+├── .env.example                  # 环境变量示例文件
+├── pyproject.toml                # Poetry 项目配置
 ├── setup_venv.ps1                # Windows 设置脚本
-├── chainlit.md                   # Chainlit 欢迎页面
 └── README.md                     # 本文件
 ```
 
@@ -448,68 +329,85 @@ local_rag_agent/
 
 ### 代码规范
 
-项目遵循以下规范：
-
 - **Python 版本**：Python 3.12+
 - **代码风格**：PEP 8
 - **类型注解**：使用 `typing` 模块
 - **文档字符串**：Google 风格
-- **错误处理**：使用自定义异常类
-- **日志系统**：使用 `logging` 模块
 
 ### 开发环境设置
 
 ```bash
-# 激活虚拟环境
-.\venv\Scripts\Activate.ps1  # Windows
+# 激活 Poetry 虚拟环境
+poetry shell
 
-# 安装开发依赖（如果有）
-pip install -r requirements-dev.txt
+# 或使用 poetry run 运行命令（无需激活）
+poetry run python app/interfaces/cli/main.py
 ```
 
-### 运行测试
+### 代码检查和格式化
+
+使用 Pre-commit Hooks（推荐）：
 
 ```bash
-# 运行测试套件
-pytest test/
+# 安装 pre-commit
+poetry add --group dev pre-commit
 
-# 运行特定测试
-pytest test/test_rag_workflow.py
+# 安装 Git hooks
+poetry run pre-commit install
+
+# 手动运行所有检查
+poetry run pre-commit run --all-files
 ```
 
-### 代码检查
+或使用自动安装脚本：
 
-```bash
-# 代码格式检查
-flake8 app/
-
-# 类型检查
-mypy app/
-
-# 代码格式化
-black app/
+```powershell
+.\setup_pre_commit.ps1
 ```
 
-### 添加新功能
+Pre-commit 包含的检查：
+- 代码格式化（yapf - Google Style）
+- 代码检查（ruff）
+- 导入排序（isort）
+- 文件格式检查（YAML、JSON）
+- 安全检查（私密信息检测）
+- Markdown 格式检查
 
-1. **添加新的文档格式支持**：
-   - 修改 `app/core/document_loader.py`
-   - 添加对应的加载器函数
+## 🔍 调试和问题排查
 
-2. **修改检索策略**：
-   - 修改 `app/core/retriever.py`
-   - 实现自定义检索逻辑
+### 启用调试日志
 
-3. **集成新的 LLM**：
-   - 修改 `app/core/llm_wrapper.py`
-   - 添加新的 LLM 接口
+在 `.env` 文件中添加：
 
-### 提交代码
+```env
+ENABLE_API_DEBUG=true
+LOG_LEVEL=DEBUG
+```
 
-1. 创建功能分支
-2. 编写代码和测试
-3. 运行测试和代码检查
-4. 提交 Pull Request
+日志会显示：
+- 检索到的每个文档块的详细内容
+- 发送给 DeepSeek API 的完整请求
+- DeepSeek API 的完整响应
+
+查看日志文件：
+- 应用日志：`logs/rag_agent.log`
+- API 调试日志：`logs/api_debug.log`
+
+### 常见问题排查
+
+1. **AI 说"不知道"但文档中有相关内容**
+   - 检查日志中的"检索到的文档块"，确认是否检索到了相关文档
+   - 检查"发送给 API 的完整请求"，确认上下文是否正确包含相关信息
+   - 尝试调整 `k` 值（检索更多文档块）
+
+2. **检索到的文档块不相关**
+   - 检查文档是否正确加载和分割
+   - 尝试重新创建向量存储
+
+3. **API 请求失败**
+   - 检查日志中的错误信息
+   - 确认 API 密钥是否正确
+   - 检查网络连接
 
 ## ❓ 常见问题
 
@@ -519,53 +417,42 @@ A: 访问 [DeepSeek 平台](https://platform.deepseek.com/)，注册账号并获
 
 ### Q: 支持哪些文件格式？
 
-A: 目前支持 PDF (`.pdf`) 和文本 (`.txt`) 格式。可以通过修改 `DocumentLoader` 添加更多格式支持。
+A: 目前支持 PDF (`.pdf`) 和文本 (`.txt`) 格式。
 
 ### Q: 向量存储在哪里？
 
-A: 默认存储在 `./chroma_db` 目录。可以通过 `RAGConfig.persist_directory` 配置。
-
-### Q: 如何删除旧的向量存储？
-
-A: 删除 `chroma_db` 目录，程序会在下次运行时重新创建。
+A: 默认存储在 `./chroma_db` 目录。可以通过 `RAG_VECTORSTORE_PERSIST_DIRECTORY` 配置。
 
 ### Q: 嵌入模型首次下载很慢？
 
 A: 嵌入模型（`all-MiniLM-L6-v2`）首次运行会从 HuggingFace 下载，约 400MB。下载完成后会缓存到本地。
 
-### Q: API 调用失败怎么办？
+### Q: 模型下载超时怎么办？
 
-A: 
-1. 检查 API 密钥是否正确
-2. 检查网络连接
-3. 查看日志文件 `logs/rag_agent.log`
-4. 检查 API 余额和速率限制
+A: 如果遇到模型下载超时问题，可以：
+1. 增加超时时间：在 `.env` 文件中设置 `HF_HUB_DOWNLOAD_TIMEOUT_SECONDS=300`（5 分钟）
+2. 增加重试次数：设置 `HF_HUB_DOWNLOAD_RETRIES=10`
+3. 检查网络连接，确保可以访问 HuggingFace Hub
+4. 如果使用代理，配置 `HTTP_PROXY` 和 `HTTPS_PROXY` 环境变量
+5. 使用 HuggingFace 镜像站点：设置 `HF_ENDPOINT` 环境变量
 
 ### Q: 如何提高检索准确性？
 
 A:
-1. 调整 `chunk_size` 和 `chunk_overlap` 参数
-2. 增加检索数量 `k`
+1. 调整 `RAG_DOCUMENT_CHUNK_SIZE` 和 `RAG_DOCUMENT_CHUNK_OVERLAP` 参数
+2. 增加检索数量 `RAG_RETRIEVER_DEFAULT_K`
 3. 优化文档质量和结构
-4. 尝试不同的嵌入模型
 
 ### Q: 支持中文吗？
 
 A: 完全支持。项目使用 UTF-8 编码，支持中文文档和问答。
 
-### Q: 如何查看详细日志？
-
-A: 设置环境变量 `LOG_LEVEL=DEBUG`，日志会输出到 `logs/rag_agent.log`。
-
-更多问题请参考 [故障排除指南](docs/troubleshooting.md)。
-
 ## 📚 相关文档
 
-- [快速开始指南](docs/quickstart.md)
-- [故障排除指南](docs/troubleshooting.md)
-- [RAG 工作流程说明](docs/RAG_WORKFLOW_EXPLAINED.md)
 - [Chainlit 使用指南](docs/chainlit-guide.md)
-- [Python 3.12 安装指南](docs/INSTALL_PYTHON312.md)
+- [Pre-commit 使用指南](docs/pre-commit-guide.md)
+- [.env 文件最佳实践](docs/env_file_best_practices.md)
+- [Cursor 角色指南](docs/cursor-roles-guide.md)
 
 ## 🤝 贡献
 
@@ -594,7 +481,7 @@ A: 设置环境变量 `LOG_LEVEL=DEBUG`，日志会输出到 `logs/rag_agent.log
 如有问题或建议，请通过以下方式联系：
 
 - 提交 [Issue](https://github.com/your-repo/issues)
-- 发送邮件至 [your-email@example.com]
+- 发送邮件至 [zhangmin04144@gmail.com]
 
 ---
 

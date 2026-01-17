@@ -20,6 +20,7 @@
 ```
 
 例如：
+
 ```powershell
 .\switch-role.ps1 review    # 切换到代码审查专家
 .\switch-role.ps1 dev       # 切换到Python全栈AI工程师

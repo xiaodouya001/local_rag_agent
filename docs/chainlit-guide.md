@@ -47,22 +47,26 @@ chainlit run app/chainlit_app.py
 ## 功能特点
 
 ### ✨ 现代化界面
+
 - 类似 ChatGPT 的聊天界面
 - 支持深色/浅色主题切换
 - 流畅的动画效果
 
 ### 💬 聊天功能
+
 - 多轮对话支持
 - 消息历史记录
 - 流式输出（打字效果）
 - 消息编辑和删除
 
 ### 📚 文档管理
+
 - 拖拽上传文件
 - 支持 PDF、TXT 等多种格式
 - 显示参考的文档块
 
 ### 🔧 高级功能
+
 - 代码高亮
 - Markdown 渲染
 - 文件下载
@@ -136,6 +140,7 @@ chainlit run app/chainlit_app.py
 Chainlit 支持多种部署方式：
 
 1. **Docker 部署**
+
 ```dockerfile
 FROM python:3.12-slim
 WORKDIR /app
@@ -146,6 +151,7 @@ CMD ["chainlit", "run", "app/chainlit_app.py", "--port", "8000"]
 ```
 
 2. **使用 Gunicorn**
+
 ```powershell
 pip install gunicorn
 gunicorn -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 app.chainlit_app:app
@@ -159,11 +165,12 @@ gunicorn -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000 app.chainlit_app:
 
 ## 常见问题
 
-
 ### Q: Chainlit 支持哪些文件格式？
+
 A: 支持 PDF、TXT、Markdown、代码文件等多种格式。
 
 ### Q: 如何自定义界面主题？
+
 A: 在 `.chainlit/config.toml` 中设置 `theme = "dark"` 或 `theme = "light"`。
 
 ## 更多资源

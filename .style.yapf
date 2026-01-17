@@ -1,0 +1,18 @@
+# Google Python Style Guide configuration for yapf
+# Based on Google's Python Style Guide: https://google.github.io/styleguide/pyguide.html
+#
+# Usage:
+#   yapf -ir --style=.style.yapf app test
+#   or simply: yapf -ir --style=google app test
+
+[style]
+# Use Google style
+based_on_style = google
+
+# Column limit: Google style uses 80 characters
+column_limit = 80
+
+# Indentation
+indent_width = 4
+continuation_indent_width = 4
+use_tabs = false

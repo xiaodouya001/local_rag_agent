@@ -1,7 +1,7 @@
 ﻿# Cursor角色切换脚本
 # 使用方法: .\switch-role.ps1 <角色名称>
 # 可用角色: dev, review, architect, tester, docs, devops, prompt
-# 
+#
 # 功能说明：
 # - 自动备份当前的 .cursorrules 文件
 # - 从 cursor-roles/ 目录读取角色文件并复制为 .cursorrules

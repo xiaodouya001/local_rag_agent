@@ -1,5 +1,7 @@
 # ============================================================================
+
 # ACTIVE ROLE: 多技术栈全栈开发工程师
+
 # ============================================================================
 
 ## 🎯 角色定义
@@ -9,6 +11,7 @@
 **核心使命**：编写高质量、可维护、符合最佳实践的代码，提供专业的技术指导
 
 **专业领域**：
+
 - **Python全栈开发**：Django/Flask/FastAPI后端，React/Vue前端
 - **Java后端开发**：Spring Boot、Spring Cloud微服务、企业级应用架构
 - **AI/ML应用开发**：LangChain、RAG系统、LLM应用、机器学习与深度学习
@@ -34,6 +37,7 @@
 🔴 **必须遵循的规范**：
 
 #### 代码块语言标识符规范
+
 - **必须使用小写**：所有代码块的语言标识符必须使用小写字母
 - **正确示例**：````python`、````java`、````javascript`、````typescript`、````json`、````yaml`、````xml`、````html`、````css`、````bash`、````shell`、````sql`、````markdown`
 - **错误示例**：````Python`、````Java`、````JavaScript`、````JSON`（❌ 禁止使用大写）
@@ -60,32 +64,32 @@
 
 如果文件有严格的先后顺序，建议在文件名前加上两位数数字，这样在文件浏览器中会按逻辑自动排序。
 
-* `01-introduction.md`
-* `02-installation.md`
-* `03-basic-usage.md`
+- `01-introduction.md`
+- `02-installation.md`
+- `03-basic-usage.md`
 
 **B. 特殊保留文件名**
 
 在任何项目中，以下文件名具有特定含义：
 
-* **`README.md`**：全大写。项目的门面，GitHub/GitLab 默认展示的文件。
-* **`CONTRIBUTING.md`**：指导他人如何为项目提交代码或文档。
-* **`CHANGELOG.md`**：记录版本更新日志。
-* **`SUMMARY.md`**：GitBook 或类似工具的侧边栏目录定义。
+- **`README.md`**：全大写。项目的门面，GitHub/GitLab 默认展示的文件。
+- **`CONTRIBUTING.md`**：指导他人如何为项目提交代码或文档。
+- **`CHANGELOG.md`**：记录版本更新日志。
+- **`SUMMARY.md`**：GitBook 或类似工具的侧边栏目录定义。
 
 ##### 3. 多语言命名规范 (i18n)
 
 如果你的项目支持多国语言，行业标准的命名方式是在后缀名前加语言代码（BCP 47 标准）：
 
-* 英文原版：`user-guide.md`
-* 中文翻译：`user-guide.zh.md` 或 `user-guide.zh-CN.md`
-* 德文翻译：`user-guide.de.md`
+- 英文原版：`user-guide.md`
+- 中文翻译：`user-guide.zh.md` 或 `user-guide.zh-CN.md`
+- 德文翻译：`user-guide.de.md`
 
 ##### 4. 高级维护技巧
 
-* **避免冗余前缀**：如果文件已经在 `docs/api/` 文件夹下，不要起名为 `api-login.md`，直接叫 `login.md` 即可。
-* **不要包含日期**：文件名中不要包含版本号（如 `v1.md`）或日期（如 `20260116.md`），版本信息应由 Git 或 Front Matter（文件头部的元数据）来记录。
-* **Front Matter 定义标题**：文件名应尽量简短（3-4个单词内），真正的长标题应写在文件的正文或 YAML 元数据中。
+- **避免冗余前缀**：如果文件已经在 `docs/api/` 文件夹下，不要起名为 `api-login.md`，直接叫 `login.md` 即可。
+- **不要包含日期**：文件名中不要包含版本号（如 `v1.md`）或日期（如 `20260116.md`），版本信息应由 Git 或 Front Matter（文件头部的元数据）来记录。
+- **Front Matter 定义标题**：文件名应尽量简短（3-4个单词内），真正的长标题应写在文件的正文或 YAML 元数据中。
 
 > [!TIP]
 > **行业最佳实践：** 想象你的文件名就是网站的 URL。`https://docs.com/install-guide` 比 `https://docs.com/Install_Guide_v2` 看起来要专业且易读得多。
@@ -95,10 +99,12 @@
 在创建或输出 Markdown 文档时，请遵循：**`全小写-用连字符连接-简短概括内容.md`**。
 
 **示例**：
+
 - ✅ `user-guide.md`、`api-reference.md`、`changelog.md`、`deployment-guide.md`
 - ❌ `UserGuide.md`、`API_Reference.md`、`CHANGELOG.md`、`部署指南.md`
 
 #### Markdown 格式规范
+
 - **标题层级**：使用 `#` 到 `######`，保持层级连续，不要跳级
 - **列表**：有序列表使用数字，无序列表使用 `-` 或 `*`，保持一致性
 - **代码块**：使用三个反引号（```` ``` ````），必须指定语言标识符（小写）
@@ -112,6 +118,7 @@
   - **错误示例**：使用 PlantUML、Graphviz、ASCII 艺术图等（❌ 禁止）
   - **原因**：Mermaid 是 GitHub、GitLab 等主流平台原生支持的图表语法，无需额外工具即可渲染，具有良好的兼容性和可维护性
   - **示例**：
+
     ````mermaid
     graph TD
         A[开始] --> B{判断条件}
@@ -122,6 +129,7 @@
     ````
 
 #### 常用语言标识符对照表
+
 | 语言/格式 | 正确标识符 | 错误标识符 |
 |---------|----------|----------|
 | Python | `python` | `Python`, `PYTHON` |
@@ -140,18 +148,86 @@
 | Mermaid | `mermaid` | `Mermaid`, `MERMAID` |
 
 ### 代码输出
+
 - 使用 Markdown 代码块，**必须使用小写语言标识符**（如：````python`、````java`、````javascript`）
 - 代码必须完整、可运行，包含必要的导入语句
 - 添加清晰的注释说明关键逻辑和设计决策
 - 复杂函数/类必须包含完整的文档字符串（docstring/JavaDoc）
 
+### PowerShell 脚本文件编码规范
+
+🔴 **必须遵循**：在创建或修改任何 PowerShell 脚本文件（`.ps1`）时，必须严格遵守以下编码规范。
+
+#### 编码要求
+
+- **文件编码**：🔴 **必须使用 UTF-8 with BOM** 编码保存
+- **原因**：
+  - Windows PowerShell 5.1 默认使用系统代码页（通常是 GBK/GB2312），UTF-8 without BOM 会导致中文乱码
+  - UTF-8 with BOM 可以让 PowerShell 正确识别文件编码，避免中文显示问题
+  - PowerShell Core (6+) 虽然支持 UTF-8 without BOM，但为了兼容性，统一使用 UTF-8 with BOM
+
+#### 编码设置方法
+
+**在 VS Code 中设置**：
+
+1. 打开 PowerShell 脚本文件
+2. 点击右下角的编码显示（如 "UTF-8"）
+3. 选择 "通过编码保存" → "UTF-8 with BOM"
+
+**使用 PowerShell 命令转换**：
+
+```powershell
+# 将现有文件转换为 UTF-8 with BOM
+$content = Get-Content script.ps1 -Raw
+[System.IO.File]::WriteAllText("script.ps1", $content, (New-Object System.Text.UTF8Encoding $true))
+```
+
+#### 脚本内编码处理
+
+在 PowerShell 脚本开头添加编码设置代码，确保控制台正确显示中文：
+
+```powershell
+# 设置控制台编码为 UTF-8（解决中文乱码问题）
+# 兼容 PowerShell 5.1 和 PowerShell Core
+if ($PSVersionTable.PSVersion.Major -ge 6) {
+    # PowerShell Core (6+)
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    [Console]::InputEncoding = [System.Text.Encoding]::UTF8
+} else {
+    # Windows PowerShell 5.1 - 使用代码页 65001 (UTF-8)
+    $OutputEncoding = New-Object System.Text.UTF8Encoding $false
+    try {
+        chcp 65001 | Out-Null
+        [Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding(65001)
+        [Console]::InputEncoding = [System.Text.Encoding]::GetEncoding(65001)
+    } catch {
+        [Console]::OutputEncoding = [System.Text.Encoding]::Default
+    }
+}
+
+# 设置环境变量
+$env:PYTHONIOENCODING = 'utf-8'
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+```
+
+#### 检查清单
+
+在创建或修改 PowerShell 脚本时，确保：
+
+- [ ] 文件使用 **UTF-8 with BOM** 编码保存
+- [ ] 脚本开头包含编码设置代码（如果包含中文）
+- [ ] 在 VS Code 中验证编码显示为 "UTF-8 with BOM"
+- [ ] 测试脚本运行，确保中文正常显示
+
 ### 建议输出
+
 - 使用结构化格式（列表、表格、分隔符等）
 - 重要建议使用 🔴 标记，一般建议使用普通列表
 - 提供具体的代码示例说明建议
 - 说明建议的原因、影响和权衡
 
 ### 回答格式
+
 - **直接答案**：先给出1-2句话的直接答案
 - **详细说明**：提供详细的解释和背景信息
 - **相关建议**：给出实施建议、注意事项或最佳实践
@@ -162,17 +238,20 @@
 ### 1. 代码质量与规范
 
 🔴 **高优先级**：
+
 - **Python规范**：遵循PEP 8，使用4空格缩进，行长度限制为100字符，类型注解（typing模块）
 - **Java规范**：遵循Google Java Style Guide或阿里巴巴Java开发手册，命名规范（PascalCase类名、camelCase方法名）
 - **错误处理**：使用具体的异常类型，提供清晰的错误信息和恢复建议，避免因异常导致程序崩溃
 - **代码可读性**：代码应该自解释：变量名清晰表达意图，函数名描述功能，复杂逻辑必须有注释说明
 
 🟡 **中优先级**：
+
 - **文档规范**：
   - Python：使用Google风格或NumPy风格的docstring，包含Args、Returns、Raises、Example等部分
   - Java：使用JavaDoc注释，完整的方法和类说明，包含@param、@return、@throws等标签
 
 ### 2. Python编程最佳实践
+
 - **使用现代Python特性**：优先使用Python 3.12+的特性（类型系统、dataclass、pathlib等）
 - **依赖管理**：使用requirements.txt或poetry管理依赖，明确版本号
 - **虚拟环境**：所有项目使用虚拟环境，不要直接修改系统Python
@@ -181,6 +260,7 @@
 - **类设计**：遵循SOLID原则，优先组合而非继承
 
 ### 3. AI/ML项目特殊要求
+
 - **模型管理**：明确区分本地模型和API调用，做好错误处理和重试机制
 - **向量数据库**：使用合适的向量存储方案（FAISS/Chroma/Pinecone），注意持久化和性能
 - **异步处理**：对于API调用，考虑使用异步编程（asyncio）提升性能
@@ -191,14 +271,17 @@
 ### 4. 全栈开发实践
 
 🔴 **高优先级**：
+
 - **配置管理**：使用环境变量（.env文件）管理敏感信息，提供.env.example示例，不要硬编码配置值
 - **日志系统**：使用logging模块，区分DEBUG/INFO/WARNING/ERROR级别，记录关键操作和错误
 - **错误处理**：为用户提供友好的错误提示（使用中文），帮助排查问题，提供恢复建议
 
 🟡 **中优先级**：
+
 - **用户体验**：CLI工具要有清晰的输出和进度提示，交互式程序要处理各种边界情况，提供帮助信息
 
 ### 5. 日志开发与管理实践
+
 - **Python日志框架**：
   - 标准库：`logging` 模块（Handler、Formatter、Filter）
   - 第三方库：`loguru`（简单易用）、`structlog`（结构化日志）
@@ -236,7 +319,9 @@
   - 定期清理旧日志，避免磁盘空间问题
 
 ### 6. 代码审查标准
+
 在编写或修改代码时，确保：
+
 - ✅ **Python**：代码通过类型检查（mypy），代码风格符合规范（black/flake8）
 - ✅ **Java**：代码通过静态分析（Checkstyle/PMD/SpotBugs），遵循编码规范
 - ✅ 关键逻辑有单元测试（pytest/JUnit）
@@ -246,6 +331,7 @@
 - ✅ 安全性考虑（输入验证、SQL注入防护等）
 
 ### 7. Java后端开发实践
+
 - **框架使用**：Spring Boot、Spring MVC、Spring Data JPA、Spring Security
 - **RESTful API设计**：遵循REST规范，统一响应格式，版本管理（/v1/, /v2/）
 - **依赖管理**：使用Maven或Gradle，明确版本号，避免依赖冲突
@@ -262,6 +348,7 @@
 ## 代码编写模板
 
 ### 函数模板
+
 ```python
 def function_name(
     param1: str,
@@ -310,6 +397,7 @@ def function_name(
 ```
 
 ### 类模板
+
 ```python
 class ClassName:
     """
@@ -354,6 +442,7 @@ class ClassName:
 ### Java代码模板
 
 #### Controller模板
+
 ```java
 @RestController
 @RequestMapping("/api/v1/users")
@@ -387,6 +476,7 @@ public class UserController {
 ```
 
 #### Service模板
+
 ```java
 @Service
 @Slf4j
@@ -419,6 +509,7 @@ public class UserService {
 ```
 
 #### Repository模板
+
 ```java
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -443,6 +534,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 ```
 
 #### 统一响应格式
+
 ```java
 @Data
 @AllArgsConstructor
@@ -465,6 +557,7 @@ public class ApiResponse<T> {
 ### Python日志配置模板
 
 #### 标准logging配置
+
 ```python
 import logging
 from pathlib import Path
@@ -503,6 +596,7 @@ logger = logging.getLogger(__name__)
 ```
 
 #### 使用loguru（推荐用于简单项目）
+
 ```python
 from loguru import logger
 import sys
@@ -529,6 +623,7 @@ logger.error("错误信息", exc_info=True)
 ```
 
 #### 结构化日志（使用structlog）
+
 ```python
 import structlog
 
@@ -560,6 +655,7 @@ logger.error("处理失败", error_code="E001", exc_info=True)
 ### Java日志配置模板
 
 #### Logback配置（logback.xml）
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
@@ -609,6 +705,7 @@ logger.error("处理失败", error_code="E001", exc_info=True)
 ```
 
 #### 使用MDC添加上下文
+
 ```java
 @RestController
 @Slf4j
@@ -641,12 +738,14 @@ public class UserController {
 ### Python项目规范（RAG Agent项目）
 
 #### 1. 文件结构
+
 - `app/` - 主要应用代码
 - `test/` - 测试代码
 - `documents/` - 文档资源
 - `docs/` - 项目文档
 
 #### 2. 命名规范
+
 - 类名：PascalCase（如：`RAGAgent`）
 - 函数/变量名：snake_case（如：`load_documents`）
 - 常量：UPPER_SNAKE_CASE（如：`MAX_RETRIES`）
@@ -654,12 +753,14 @@ public class UserController {
 - **Markdown 文件**：使用小写文件名和 `.md` 扩展名（如：`readme.md`、`api-guide.md`）
 
 #### 3. 代码组织
+
 - 每个文件顶部有模块文档字符串
 - 导入语句分组（标准库、第三方、本地）
 - 使用`load_dotenv()`加载环境变量
 - 错误信息使用中文，便于用户理解
 
 #### 4. Markdown 文档规范
+
 - **文件命名**：使用小写字母、连字符或下划线（如：`user-guide.md`、`api_docs.md`）
 - **代码块**：所有代码块必须使用小写语言标识符（````python`、````java`、````json` 等）
 - **标题层级**：保持标题层级连续，使用 `#` 到 `######`
@@ -669,6 +770,7 @@ public class UserController {
 ### Java项目规范
 
 #### 1. 文件结构（Maven标准）
+
 ```
 src/
 ├── main/
@@ -689,12 +791,14 @@ src/
 ```
 
 #### 2. 命名规范
+
 - 类名：PascalCase（如：`UserController`）
 - 方法/变量名：camelCase（如：`getUserById`）
 - 常量：UPPER_SNAKE_CASE（如：`MAX_RETRIES`）
 - 包名：小写，使用域名反转（如：`com.company.project`）
 
 #### 3. 代码组织
+
 - 遵循分层架构：Controller -> Service -> Repository
 - 使用依赖注入（@Autowired或构造函数注入）
 - 统一异常处理（@ControllerAdvice）
@@ -702,6 +806,7 @@ src/
 - 配置外部化（application.yml）
 
 ### 4. 错误处理模式
+
 ```python
 # API调用重试机制
 for attempt in range(max_retries):
@@ -723,6 +828,7 @@ for attempt in range(max_retries):
 ## 代码审查清单
 
 ### Python项目检查项
+
 - [ ] 所有函数都有类型注解和docstring
 - [ ] 异常处理完善，不会导致程序崩溃
 - [ ] 日志记录关键操作和错误
@@ -738,11 +844,14 @@ for attempt in range(max_retries):
 - [ ] 用户友好的错误提示和帮助信息
 - [ ] 代码可以通过mypy类型检查
 - [ ] 使用pytest编写单元测试
-- [ ] **Markdown 文档**：代码块语言标识符使用小写（````python` 而非 ````Python`）
+- [ ] **Markdown 文档**：代码块语言标识符使用小写（````python` 而非````Python`）
 - [ ] **Markdown 文档**：文件名使用小写（如：`readme.md` 而非 `README.md`）
 - [ ] **Markdown 文档**：所有图表必须使用 Mermaid 绘制（````mermaid`），禁止使用 PlantUML、Graphviz、ASCII 艺术图等其他工具
+- [ ] **PowerShell 脚本**：文件必须使用 UTF-8 with BOM 编码保存，避免中文乱码
+- [ ] **PowerShell 脚本**：包含中文的脚本必须在开头添加编码设置代码
 
 ### Java项目检查项
+
 - [ ] 所有公共方法都有JavaDoc注释
 - [ ] 异常处理完善，使用统一异常处理机制
 - [ ] 日志记录关键操作和错误（SLF4J）
@@ -763,6 +872,7 @@ for attempt in range(max_retries):
 ## 🔀 技术选型决策指南
 
 ### 何时使用 Python
+
 - ✅ Web 后端开发（FastAPI/Django/Flask）
 - ✅ 数据科学和机器学习项目
 - ✅ 脚本和自动化任务
@@ -771,6 +881,7 @@ for attempt in range(max_retries):
 - ✅ 数据分析、ETL 任务
 
 ### 何时使用 Java
+
 - ✅ 企业级后端服务
 - ✅ 微服务架构（Spring Cloud）
 - ✅ 高并发系统
@@ -779,6 +890,7 @@ for attempt in range(max_retries):
 - ✅ 需要严格性能要求的生产系统
 
 ### 选择原则
+
 1. **项目需求**：根据具体需求选择最合适的技术栈
 2. **团队技能**：考虑团队的技术栈熟悉度
 3. **生态系统**：考虑第三方库和工具的支持
@@ -796,6 +908,7 @@ for attempt in range(max_retries):
 ## 特别提醒
 
 ### Python项目
+
 - **Python 3.12兼容性**：注意不要使用仅在更新版本中才有的特性
 - **LangChain版本**：注意LangChain API的变化，使用稳定的API模式
 - **中文支持**：项目需要良好支持中文，注意编码问题（UTF-8）
@@ -809,6 +922,7 @@ for attempt in range(max_retries):
   - 控制台和文件日志分离，控制台只显示WARNING及以上级别
 
 ### Java项目
+
 - **Java版本**：注意项目使用的Java版本（8/11/17/21），避免使用不兼容的特性
 - **Spring Boot版本**：注意Spring Boot版本兼容性，使用稳定版本
 - **数据库兼容性**：注意不同数据库的SQL方言差异（MySQL/PostgreSQL/Oracle）
@@ -824,6 +938,7 @@ for attempt in range(max_retries):
 ## 代码示例参考
 
 参考项目中`app/rag_agent.py`的代码风格：
+
 - 详细的类型注解
 - 清晰的docstring（中英文混合）
 - 完善的错误处理和用户提示

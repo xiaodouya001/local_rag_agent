@@ -1,0 +1,186 @@
+# Pre-commit hooks 配置文件
+# 在提交代码前自动运行代码检查、格式化等工具
+#
+# 安装方法：
+#   1. 安装 pre-commit: pip install pre-commit
+#   2. 安装 hooks: pre-commit install
+#   3. 手动运行: pre-commit run --all-files
+#
+# 版本说明：
+#   - yapf: 使用官方 google/yapf 仓库 v0.43.0（mirrors-yapf 已归档）
+#   - ruff: v0.14.11（使用 ruff-check hook）
+#   - isort: 5.13.2（6.x 版本在 pre-commit 中可能有兼容性问题）
+#
+# 更多信息: https://pre-commit.com/
+
+# 全局配置
+default_language_version:
+  python: python3.12
+
+# 排除的文件和目录
+exclude: |
+  (?x)^(
+      \.git/|
+      \.venv/|
+      venv/|
+      __pycache__/|
+      \.pytest_cache/|
+      \.mypy_cache/|
+      chroma_db/|
+      logs/|
+      \.chainlit/|
+      dist/|
+      build/|
+      \.eggs/|
+      \.idea/|
+      \.vscode/
+  )
+
+# Hook 配置
+repos:
+  # ============================================================================
+  # 通用文件检查
+  # ============================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # 检查文件末尾是否有换行符
+      - id: end-of-file-fixer
+        exclude: ^(.*\.(png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot))$
+
+      # 检查文件末尾是否有尾随空白
+      - id: trailing-whitespace
+        exclude: ^(.*\.(md))$  # Markdown 文件允许尾随空格（用于换行）
+        args: [--markdown-linebreak-ext=md]
+
+      # 检查是否有合并冲突标记
+      - id: check-merge-conflict
+
+      # 检查是否有私密信息（API密钥、密码等）
+      - id: detect-private-key
+
+      # 检查 YAML 文件语法
+      - id: check-yaml
+        args: [--unsafe]  # 允许自定义标签
+
+      # 检查 JSON 文件语法
+      - id: check-json
+
+      # 检查是否添加了大的文件（默认 > 500KB）
+      # 排除自动生成的文件（poetry.lock 通常较大，但需要提交）
+      - id: check-added-large-files
+        args: [--maxkb=500]
+        exclude: ^poetry\.lock$
+
+      # 检查是否包含调试语句（print, pdb等）
+      - id: debug-statements
+        exclude: ^(test/|.*test.*\.py)$  # 测试文件允许调试语句
+
+      # 检查文件是否可执行
+      - id: check-executables-have-shebangs
+
+      # 检查是否有损坏的符号链接
+      - id: check-symlinks
+
+      # 检查是否有混合的行尾符
+      - id: mixed-line-ending
+        args: [--fix=lf]  # 统一使用 LF（Unix 风格）
+
+  # ============================================================================
+  # Python 代码格式化 - yapf (Google Style)
+  # ============================================================================
+  # 注意：使用官方 google/yapf 仓库（mirrors-yapf 已归档）
+  # 使用最新稳定版本 v0.43.0（2024-11-14 发布）
+  - repo: https://github.com/google/yapf
+    rev: v0.43.0
+    hooks:
+      - id: yapf
+        name: yapf (Google Style)
+        args: [--style=.style.yapf]
+        types: [python]
+        exclude: ^(test/|.*test.*\.py)$  # 可选：测试文件不自动格式化
+
+  # ============================================================================
+  # Python 代码检查 - ruff (快速且功能强大)
+  # ============================================================================
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.11
+    hooks:
+      # Ruff 代码检查（替代 flake8 + pylint）
+      # 注意：使用 --fix 会自动修复问题，但可能导致与 isort 的冲突
+      # 如果遇到循环修改问题，可以移除 --fix 参数，只进行检查
+      - id: ruff-check
+        name: ruff (代码检查)
+        args: [--fix]
+        types: [python]
+
+      # Ruff 格式化（可选，如果不想用 yapf 可以用这个）
+      # - id: ruff-format
+      #   name: ruff (代码格式化)
+
+  # ============================================================================
+  # Python 导入排序 - isort
+  # ============================================================================
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: isort (导入排序)
+        args: [--profile=google, --line-length=80]
+        types: [python]
+      # 注意：isort 6.x 版本在 pre-commit 中可能有兼容性问题
+      # 如需使用最新版本，可改为: rev: 6.1.0
+
+  # ============================================================================
+  # Python 类型检查 - mypy (可选)
+  # ============================================================================
+  # 注意：mypy 可能对某些第三方库（如 langchain）支持不好
+  # 如果遇到问题，可以注释掉或添加 mypy.ini 配置文件
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.8.0
+  #   hooks:
+  #     - id: mypy
+  #       name: mypy (类型检查)
+  #       args: [--ignore-missing-imports, --no-strict-optional]
+  #       types: [python]
+  #       exclude: ^(test/|.*test.*\.py)$
+
+  # ============================================================================
+  # Markdown 文件检查
+  # ============================================================================
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        name: markdownlint (Markdown 检查)
+        args: [--fix, --disable=MD013,MD024,MD025,MD036,MD040,MD051]  # 放宽文档格式要求
+        types: [markdown]
+        exclude: |
+            (?x)^(
+                docs/.*|
+                cursor-roles/.*|
+                README\.md
+            )$
+
+  # ============================================================================
+  # Poetry 依赖检查（可选）
+  # 注意：Poetry 使用 pyproject.toml 和 poetry.lock 管理依赖
+  # 可以使用 poetry check 验证配置，或使用以下 hook 检查锁定文件
+  # ============================================================================
+  # - repo: local
+  #   hooks:
+  #     - id: poetry-check
+  #       name: poetry check
+  #       entry: poetry check
+  #       language: system
+  #       types: [toml]
+  #       files: ^pyproject\.toml$
+
+  # ============================================================================
+  # 检查提交消息格式（可选）
+  # ============================================================================
+  # - repo: https://github.com/commitizen-tools/commitizen
+  #   rev: v3.13.0
+  #   hooks:
+  #     - id: commitizen
+  #       stages: [commit-msg]

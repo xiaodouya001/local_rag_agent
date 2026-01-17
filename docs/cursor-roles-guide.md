@@ -25,20 +25,24 @@
 ### 使用脚本快速切换（推荐方法）
 
 **步骤1：打开PowerShell终端**
+
 - 在项目根目录打开PowerShell
 - 确保你在项目根目录（包含 `switch-role.ps1` 的目录）
 
 **步骤2：运行切换脚本**
+
 ```powershell
 .\switch-role.ps1 review
 ```
 
 **步骤3：重新加载Cursor**
+
 - 在Cursor中按 `Ctrl+Shift+P`
 - 输入 "Reload Window" 并回车
 - 或者直接重启Cursor
 
 **步骤4：验证切换**
+
 - 在Cursor中问："请介绍一下你的角色"
 - 如果AI回答符合你切换的角色，说明切换成功！
 
@@ -87,6 +91,7 @@
 ```
 
 **工作原理：**
+
 - 所有角色文件统一存放在 `cursor-roles/` 目录中，使用 `.md` 扩展名
 - `switch-role.ps1` 脚本从 `cursor-roles/` 目录读取目标角色文件并复制为 `.cursorrules`
 - Cursor读取根目录的 `.cursorrules` 文件来确定当前角色
@@ -138,6 +143,7 @@
    - 确保你在包含 `switch-role.ps1` 的目录
 
 2. **运行切换命令**
+
    ```powershell
    .\switch-role.ps1 review
    ```
@@ -159,12 +165,14 @@
 ### 优缺点
 
 ✅ **优点**：
+
 - 一键切换，无需手动编辑文件
 - 自动备份，安全可靠
 - 每个角色独立文件，结构清晰
 - 便于版本控制和管理
 
 ❌ **缺点**：
+
 - 需要运行PowerShell脚本
 - 需要重新加载Cursor窗口
 
@@ -177,11 +185,13 @@
 如果不想使用脚本，也可以手动切换：
 
 1. **备份当前文件**
+
    ```powershell
    Copy-Item .cursorrules .cursorrules.backup
    ```
 
 2. **复制目标角色文件**
+
    ```powershell
    # 切换到代码审查专家
    Copy-Item .cursorrules.review .cursorrules -Force
@@ -196,11 +206,13 @@
 ### 优缺点
 
 ✅ **优点**：
+
 - 每个角色独立文件，结构清晰
 - 可以针对不同项目使用不同角色
 - 便于版本控制和管理
 
 ❌ **缺点**：
+
 - 需要管理多个文件
 - 切换需要重命名操作
 
@@ -241,10 +253,12 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 ### 优缺点
 
 ✅ **优点**：
+
 - 根据工作目录自动切换角色
 - 适合大型多模块项目
 
 ❌ **缺点**：
+
 - 需要在多个目录维护文件
 - 需要记住哪个目录用哪个角色
 
@@ -341,6 +355,7 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 ### 场景1：开发新功能
 
 **步骤：**
+
 1. 确保当前激活的是"Python全栈AI工程师"角色
 2. 在Cursor中提问：`请帮我实现一个用户登录功能，使用FastAPI`
 3. AI会按照Python全栈AI工程师的标准，提供：
@@ -352,6 +367,7 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 ### 场景2：代码审查
 
 **步骤：**
+
 1. 切换到"代码审查专家"角色
 2. 在Cursor中提问：`请审查这段代码，找出潜在问题`（粘贴代码）
 3. AI会从代码审查专家的角度，提供：
@@ -363,6 +379,7 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 ### 场景3：系统设计
 
 **步骤：**
+
 1. 切换到"架构师"角色
 2. 在Cursor中提问：`请设计一个支持百万级用户的RAG系统架构`
 3. AI会从架构师的角度，提供：
@@ -374,6 +391,7 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 ### 场景4：编写测试
 
 **步骤：**
+
 1. 切换到"测试专家"角色
 2. 在Cursor中提问：`请为这个函数编写完整的测试用例`（提供函数代码）
 3. AI会从测试专家的角度，提供：
@@ -385,6 +403,7 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 ### 场景5：编写文档
 
 **步骤：**
+
 1. 切换到"文档工程师"角色
 2. 在Cursor中提问：`请为这个API编写详细的文档`（提供API代码）
 3. AI会从文档工程师的角度，提供：
@@ -396,6 +415,7 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 ### 场景6：部署配置
 
 **步骤：**
+
 1. 切换到"DevOps工程师"角色
 2. 在Cursor中提问：`请帮我创建一个Dockerfile和docker-compose.yml来部署这个RAG应用`
 3. AI会从DevOps工程师的角度，提供：
@@ -407,6 +427,7 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 ### 场景7：Prompt 开发
 
 **步骤：**
+
 1. 切换到"资深 Prompt 开发专家"角色
 2. 在Cursor中提问：`请帮我设计一个用于 RAG 系统的问答 Prompt，要求能够准确引用文档来源`
 3. AI会从 Prompt 开发专家的角度，提供：
@@ -425,11 +446,13 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 项目已包含 `switch-role.ps1` 脚本，位于项目根目录。
 
 **使用方法：**
+
 ```powershell
 .\switch-role.ps1 <角色名>
 ```
 
 **可用角色：**
+
 - `dev` - Python全栈AI工程师
 - `review` - 代码审查专家
 - `architect` - 架构师
@@ -439,12 +462,14 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 - `prompt` - 资深 Prompt 开发专家
 
 **脚本功能：**
+
 - ✅ 自动备份当前的 `.cursorrules` 文件
 - ✅ 从 `cursor-roles/` 目录读取角色文件并复制为 `.cursorrules`
 - ✅ 显示切换结果和后续操作提示
 - ✅ 错误检查和友好提示
 
 **示例：**
+
 ```powershell
 # 切换到代码审查专家
 .\switch-role.ps1 review
@@ -462,12 +487,14 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 ### Q1: 切换角色后，AI的回答没有变化？
 
 **A:** 可能的原因：
+
 1. 脚本执行失败（检查PowerShell输出是否有错误）
 2. Cursor没有重新加载配置（必须重新加载窗口）
 3. 角色文件不存在（检查 `cursor-roles/<角色名>.md` 文件是否存在）
 4. 在错误的目录（确保在项目根目录运行脚本）
 
 **解决方法：**
+
 1. 检查脚本输出，确认显示"✓ 已切换到角色: XXX"
 2. 在Cursor中按 `Ctrl+Shift+P`，输入 "Reload Window" 重新加载窗口
 3. 或者直接重启Cursor
@@ -476,6 +503,7 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 ### Q2: 如何知道当前激活的是哪个角色？
 
 **A:** 有两种方法：
+
 1. **查看 `.cursorrules` 文件**：打开文件，查看顶部的 `ACTIVE ROLE` 标记
 2. **在Cursor中测试**：问 `请介绍一下你的角色`，AI会告诉你当前的角色
 3. **查看备份文件**：如果最近切换过，可以查看 `.cursorrules.backup` 了解之前的角色
@@ -491,22 +519,27 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 ### Q5: 如何临时使用某个角色，而不修改配置文件？
 
 **A:** 使用Cursor的Composer功能，在对话中直接指定：
+
 ```
 @.cursorrules 请以代码审查专家的角色来审查这段代码...
 ```
+
 这样可以在不修改配置文件的情况下临时切换视角。
 
 ### Q6: 如何恢复之前的角色配置？
 
 **A:** 脚本会自动备份到 `.cursorrules.backup`，可以通过以下方式恢复：
+
 ```powershell
 Copy-Item .cursorrules.backup .cursorrules -Force
 ```
+
 然后重新加载Cursor窗口。
 
 ### Q7: 切换角色后，代码风格会改变吗？
 
 **A:** 会。不同角色有不同的关注点：
+
 - Python全栈AI工程师：关注代码质量和项目规范
 - 代码审查专家：关注代码问题和改进建议
 - 架构师：关注系统设计和架构
@@ -519,13 +552,16 @@ Copy-Item .cursorrules.backup .cursorrules -Force
 ### Q8: 如何添加自定义角色？
 
 **A:** 按以下步骤添加：
+
 1. **创建新的角色文件**：在 `cursor-roles/` 目录中创建 `<角色名>.md`
+
    ```powershell
    # 例如：创建 cursor-roles/custom.md
    New-Item cursor-roles\custom.md
    ```
 
 2. **编辑角色文件**：添加角色定义内容
+
    ```markdown
    # ============================================================================
    # ACTIVE ROLE: 我的自定义角色
@@ -539,6 +575,7 @@ Copy-Item .cursorrules.backup .cursorrules -Force
 3. **修改脚本**：编辑 `switch-role.ps1`，在 `ValidateSet` 和 `$roleNames` 中添加新角色
 
 4. **使用新角色**：
+
    ```powershell
    .\switch-role.ps1 custom
    ```
@@ -562,6 +599,7 @@ Copy-Item .cursorrules.backup .cursorrules -Force
 ### 问题：Cursor没有识别新的角色
 
 **解决方案**：
+
 1. 保存 `.cursorrules` 文件
 2. 重启Cursor或重新加载窗口（Ctrl+Shift+P -> Reload Window）
 3. 确认文件编码为UTF-8

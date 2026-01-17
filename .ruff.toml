@@ -1,0 +1,55 @@
+# Ruff 配置文件
+# Ruff 是一个极快的 Python linter 和代码格式化工具
+# 文档: https://docs.astral.sh/ruff/
+#
+# 注意：.ruff.toml 文件使用顶层配置，不需要 [tool.ruff] 前缀
+
+# 行长度（与 Google Style 保持一致）
+line-length = 80
+
+# 目标 Python 版本
+target-version = "py312"
+
+# 排除的目录和文件
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    "chroma_db",
+    "logs",
+    ".chainlit",
+    "dist",
+    "build",
+    ".eggs",
+    ".idea",
+    ".vscode",
+]
+
+# Lint 配置
+[lint]
+# 启用的规则集
+# 注意：不启用 "I"（isort），因为使用独立的 isort 工具处理导入排序
+select = [
+    "E",     # pycodestyle 错误
+    "W",     # pycodestyle 警告
+    "F",     # Pyflakes
+    # "I",   # isort（导入排序）- 禁用，使用独立的 isort 工具
+    "N",     # pep8-naming
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "C4",    # flake8-comprehensions
+    "SIM",   # flake8-simplify
+]
+
+# 忽略的规则（放宽检查，减少严格性）
+# 注意：W503 规则在新版本的 ruff 中已被移除，不再需要忽略
+ignore = [
+    "E501",  # 行长度（由格式化工具处理）
+    "E203",  # 切片中的空格（与 Black 风格兼容）
+    "E402",  # 模块级导入不在文件顶部（允许在 sys.path 设置后导入）
+    "B904",  # 异常处理中使用 raise ... from（允许简单的 raise）
+    "UP007",  # 类型注解使用 X | Y 而不是 Union[X, Y]（允许旧式写法）
+]

@@ -4,11 +4,11 @@ RAG 核心模块
 """
 
 from .document_loader import DocumentLoader
-from .text_splitter import TextSplitter
-from .vector_store import VectorStoreManager
-from .retriever import Retriever
 from .llm_wrapper import LLMWrapper
 from .qa_chain import QAChainBuilder
+from .retriever import Retriever
+from .text_splitter import TextSplitter
+from .vector_store import VectorStoreManager
 
 __all__ = [
     'DocumentLoader',
