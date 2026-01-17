@@ -1,5 +1,5 @@
 ﻿# Cursor角色切换脚本
-# 使用方法: .\switch-role.ps1 <角色名称>
+# 使用方法: .\switch_role.ps1 <角色名称>
 # 可用角色: dev, review, architect, tester, docs, devops, prompt
 #
 # 功能说明：

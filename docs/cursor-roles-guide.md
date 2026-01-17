@@ -27,12 +27,12 @@
 **步骤1：打开PowerShell终端**
 
 - 在项目根目录打开PowerShell
-- 确保你在项目根目录（包含 `switch-role.ps1` 的目录）
+- 确保你在项目根目录（包含 `switch_role.ps1` 的目录）
 
 **步骤2：运行切换脚本**
 
 ```powershell
-.\switch-role.ps1 review
+.\switch_role.ps1 review
 ```
 
 **步骤3：重新加载Cursor**
@@ -50,25 +50,25 @@
 
 ```powershell
 # 切换到Python全栈AI工程师（默认）
-.\switch-role.ps1 dev
+.\switch_role.ps1 dev
 
 # 切换到代码审查专家
-.\switch-role.ps1 review
+.\switch_role.ps1 review
 
 # 切换到架构师
-.\switch-role.ps1 architect
+.\switch_role.ps1 architect
 
 # 切换到测试专家
-.\switch-role.ps1 tester
+.\switch_role.ps1 tester
 
 # 切换到文档工程师
-.\switch-role.ps1 docs
+.\switch_role.ps1 docs
 
 # 切换到DevOps工程师
-.\switch-role.ps1 devops
+.\switch_role.ps1 devops
 
 # 切换到 Prompt 开发专家
-.\switch-role.ps1 prompt
+.\switch_role.ps1 prompt
 ```
 
 ### 文件结构说明
@@ -87,13 +87,13 @@
 │   ├── docs.md               # 文档工程师
 │   ├── devops.md             # DevOps工程师
 │   └── prompt.md             # 资深 Prompt 开发专家
-└── switch-role.ps1            # 角色切换脚本
+└── switch_role.ps1            # 角色切换脚本
 ```
 
 **工作原理：**
 
 - 所有角色文件统一存放在 `cursor-roles/` 目录中，使用 `.md` 扩展名
-- `switch-role.ps1` 脚本从 `cursor-roles/` 目录读取目标角色文件并复制为 `.cursorrules`
+- `switch_role.ps1` 脚本从 `cursor-roles/` 目录读取目标角色文件并复制为 `.cursorrules`
 - Cursor读取根目录的 `.cursorrules` 文件来确定当前角色
 - 切换前会自动备份当前的 `.cursorrules` 到 `.cursorrules.backup`
 - 这种结构更加整洁，避免了根目录文件过多的问题
@@ -123,7 +123,7 @@
 使用脚本切换角色时，按照以下清单检查：
 
 - [ ] 已在项目根目录打开PowerShell
-- [ ] 已运行 `.\switch-role.ps1 <角色名>` 命令
+- [ ] 已运行 `.\switch_role.ps1 <角色名>` 命令
 - [ ] 脚本显示"✓ 已切换到角色: XXX"
 - [ ] 已在Cursor中重新加载窗口（Ctrl+Shift+P -> Reload Window）
 - [ ] 已测试验证（在Cursor中问"请介绍一下你的角色"）
@@ -140,12 +140,12 @@
 
 1. **打开PowerShell终端**
    - 在项目根目录打开PowerShell
-   - 确保你在包含 `switch-role.ps1` 的目录
+   - 确保你在包含 `switch_role.ps1` 的目录
 
 2. **运行切换命令**
 
    ```powershell
-   .\switch-role.ps1 review
+   .\switch_role.ps1 review
    ```
 
 3. **重新加载Cursor**
@@ -443,12 +443,12 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 
 ### Windows PowerShell脚本
 
-项目已包含 `switch-role.ps1` 脚本，位于项目根目录。
+项目已包含 `switch_role.ps1` 脚本，位于项目根目录。
 
 **使用方法：**
 
 ```powershell
-.\switch-role.ps1 <角色名>
+.\switch_role.ps1 <角色名>
 ```
 
 **可用角色：**
@@ -472,13 +472,13 @@ Cursor会自动使用当前工作目录或其父目录中的 `.cursorrules` 文�
 
 ```powershell
 # 切换到代码审查专家
-.\switch-role.ps1 review
+.\switch_role.ps1 review
 
 # 切换回开发角色
-.\switch-role.ps1 dev
+.\switch_role.ps1 dev
 ```
 
-**脚本源码位置：** `switch-role.ps1`（项目根目录）
+**脚本源码位置：** `switch_role.ps1`（项目根目录）
 
 ---
 
@@ -572,19 +572,19 @@ Copy-Item .cursorrules.backup .cursorrules -Force
    工作方式...
    ```
 
-3. **修改脚本**：编辑 `switch-role.ps1`，在 `ValidateSet` 和 `$roleNames` 中添加新角色
+3. **修改脚本**：编辑 `switch_role.ps1`，在 `ValidateSet` 和 `$roleNames` 中添加新角色
 
 4. **使用新角色**：
 
    ```powershell
-   .\switch-role.ps1 custom
+   .\switch_role.ps1 custom
    ```
 
 ---
 
 ## 提示
 
-1. **自动备份**：`switch-role.ps1` 脚本会自动备份，无需手动操作
+1. **自动备份**：`switch_role.ps1` 脚本会自动备份，无需手动操作
 2. **验证切换**：切换后可以在Cursor中问一个问题，确认角色已正确切换
 3. **重新加载**：切换后**必须**重新加载Cursor窗口（Ctrl+Shift+P -> Reload Window）
 4. **文件位置**：确保在项目根目录运行脚本

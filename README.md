@@ -239,6 +239,31 @@ RAG_LLM_API_KEY=your-api-key-here
 
 ### Web 界面（推荐）
 
+#### 方式一：使用启动脚本（推荐，自动等待后台启动完成）
+
+**Windows PowerShell:**
+
+```powershell
+.\start_chainlit.ps1
+```
+
+或者指定端口：
+
+```powershell
+.\start_chainlit.ps1 -Port 8001
+```
+
+启动脚本会：
+- ✅ 在后台启动 Chainlit 服务器
+- ✅ 显示详细的启动日志
+- ✅ 等待 RAG Agent 完全初始化
+- ✅ 显示启动完成的 banner
+- ✅ 自动打开浏览器窗口
+
+这样可以确保在浏览器打开时，后端服务已经完全就绪，避免首次访问时的初始化错误。
+
+#### 方式二：直接启动（传统方式）
+
 启动 Chainlit 应用：
 
 ```bash
@@ -264,6 +289,8 @@ poetry run chainlit run app/interfaces/web/chainlit_app.py
 export CHAINLIT_PORT=8001
 poetry run chainlit run app/interfaces/web/chainlit_app.py
 ```
+
+**注意**：直接启动时，浏览器会在服务器启动时立即打开，此时 RAG Agent 可能还在初始化中。首次访问聊天界面时可能需要等待初始化完成。
 
 **功能**：
 - 智能问答：直接输入问题，基于文档内容回答

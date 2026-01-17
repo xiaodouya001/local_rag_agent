@@ -13,24 +13,24 @@
 
 ## 使用方法
 
-使用项目根目录的 `switch-role.ps1` 脚本来切换角色：
+使用项目根目录的 `switch_role.ps1` 脚本来切换角色：
 
 ```powershell
-.\switch-role.ps1 <角色名>
+.\switch_role.ps1 <角色名>
 ```
 
 例如：
 
 ```powershell
-.\switch-role.ps1 review    # 切换到代码审查专家
-.\switch-role.ps1 dev       # 切换到Python全栈AI工程师
+.\switch_role.ps1 review    # 切换到代码审查专家
+.\switch_role.ps1 dev       # 切换到Python全栈AI工程师
 ```
 
 ## 添加新角色
 
 1. 在此目录创建新的 `.md` 文件，例如 `custom.md`
 2. 按照现有文件的格式编写角色定义
-3. 修改 `switch-role.ps1` 脚本，添加新角色到 `ValidateSet` 和 `$roleNames`
+3. 修改 `switch_role.ps1` 脚本，添加新角色到 `ValidateSet` 和 `$roleNames`
 
 ## 注意事项
 

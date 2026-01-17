@@ -3,6 +3,7 @@ RAG Agent Chainlit Web 应用
 基于检索增强生成的AI Agent - Chainlit 版本（推荐）
 """
 
+import asyncio
 import logging
 import os
 from pathlib import Path
@@ -65,6 +66,44 @@ logger = logging.getLogger(__name__)
 # 全局变量存储 RAG Agent（应用级别共享，避免重复初始化）
 rag_agent: RAGAgent | None = None
 _initialization_lock = False
+_startup_complete = False
+_startup_failed = False
+_startup_task = None
+
+
+async def startup_initialization():
+    """
+    启动时预初始化 RAG Agent（后台任务）
+    在服务器启动时自动运行，避免用户首次访问时等待
+    """
+    global _startup_complete, _startup_failed
+    
+    logger.info("")
+    logger.info("=" * 60)
+    logger.info("🚀 开始启动 RAG Agent 后台服务...")
+    logger.info("=" * 60)
+    
+    # 等待一小段时间，确保服务器基本启动
+    await asyncio.sleep(0.5)
+    
+    # 执行初始化
+    success = await initialize_rag_agent()
+    
+    if success:
+        # Banner 已移至 PowerShell 启动脚本，此处不再显示
+        _startup_complete = True
+    else:
+        logger.error("=" * 60)
+        logger.error("❌ RAG Agent 启动失败，但服务器将继续运行")
+        logger.error("   用户首次访问时将尝试重新初始化")
+        logger.error("=" * 60)
+        _startup_failed = True
+
+
+# 使用Chainlit的启动机制
+# 注意：由于Chainlit的事件循环机制，我们在on_chat_start时进行初始化
+# 但为了更好的用户体验，我们会在首次访问时立即初始化
+# Banner 显示已移至 PowerShell 启动脚本（start_chainlit.ps1）
 
 
 async def initialize_rag_agent() -> bool:
@@ -74,10 +113,10 @@ async def initialize_rag_agent() -> bool:
     Returns:
         bool: 初始化是否成功
     """
-    global rag_agent, _initialization_lock
+    global rag_agent, _initialization_lock, _startup_complete
 
     # 如果已经初始化，直接返回
-    if rag_agent is not None:
+    if rag_agent is not None and _startup_complete:
         return True
 
     # 如果正在初始化，等待
@@ -87,40 +126,53 @@ async def initialize_rag_agent() -> bool:
 
     try:
         _initialization_lock = True
-        logger.info("开始初始化 RAG Agent...")
+        logger.info("=" * 60)
+        logger.info("🔄 开始初始化 RAG Agent...")
+        logger.info("=" * 60)
 
         # 初始化配置和 Agent（自动从环境变量读取）
+        logger.info("📋 步骤 1/5: 加载配置...")
         config = RAGConfig()
+        logger.info(f"   ✓ 配置加载完成 (模型: {config.llm_model}, 嵌入模型: {config.embedding_model})")
+        
+        logger.info("📦 步骤 2/5: 创建 RAG Agent 实例...")
         rag_agent = RAGAgent(config=config)
+        logger.info("   ✓ RAG Agent 实例创建成功")
 
         # 检查向量存储是否存在
         docs_dir = "./documents"
         vectorstore_exists = os.path.exists(config.persist_directory)
+        logger.info(f"📂 步骤 3/5: 检查向量存储 (目录: {config.persist_directory})...")
 
         if not vectorstore_exists:
             # 首次运行，需要创建向量存储
+            logger.info("   ℹ️  向量存储不存在，需要创建")
             if not os.path.exists(docs_dir):
                 os.makedirs(docs_dir, exist_ok=True)
-                logger.warning(f"文档目录不存在，已创建: {docs_dir}")
+                logger.warning(f"   ⚠️  文档目录不存在，已创建: {docs_dir}")
                 return False
 
             # 加载文档并创建向量存储
             try:
+                logger.info(f"   📄 正在从 {docs_dir} 加载文档...")
                 documents = rag_agent.load_documents(docs_dir)
 
                 if not documents:
-                    logger.warning(f"{docs_dir} 目录中没有找到文档")
+                    logger.warning(f"   ⚠️  {docs_dir} 目录中没有找到文档")
                     return False
 
+                logger.info(f"   ✓ 成功加载 {len(documents)} 个文档")
+                logger.info("   🗄️  正在创建向量存储...")
                 # 创建向量存储
                 rag_agent.create_vectorstore(documents)
-                logger.info(f"向量存储创建成功（从 {docs_dir} 加载了 {len(documents)} 个文档）")
+                logger.info(f"   ✓ 向量存储创建成功（从 {docs_dir} 加载了 {len(documents)} 个文档）")
             except (DocumentLoadError, VectorStoreError) as e:
-                logger.error(f"创建向量存储失败: {e}", exc_info=True)
+                logger.error(f"   ❌ 创建向量存储失败: {e}", exc_info=True)
                 return False
         else:
             # 加载已存在的向量存储
             try:
+                logger.info("   ℹ️  向量存储已存在，正在加载...")
                 rag_agent.load_vectorstore()
 
                 # 验证向量存储是否有数据
@@ -128,47 +180,55 @@ async def initialize_rag_agent() -> bool:
                     collection = rag_agent.vectorstore._collection
                     count = collection.count()
                     if count == 0:
-                        logger.warning("向量存储为空")
+                        logger.warning("   ⚠️  向量存储为空")
                         return False
-                    logger.info(f"向量存储加载成功，包含 {count} 个文档块")
+                    logger.info(f"   ✓ 向量存储加载成功，包含 {count} 个文档块")
                 except Exception as e:
-                    logger.warning(f"无法验证向量存储数据: {e}")
+                    logger.warning(f"   ⚠️  无法验证向量存储数据: {e}")
 
                 # 检查 documents 目录是否有新文档需要添加（增量模式）
                 if os.path.exists(docs_dir):
                     try:
                         all_documents = rag_agent.load_documents(docs_dir)
                         if all_documents:
-                            logger.info(f"检测到 {len(all_documents)} 个文档，正在检查新文件...")
+                            logger.info(f"   📄 检测到 {len(all_documents)} 个文档，正在检查新文件...")
                             # 使用增量模式，只添加新文件或更新的文件
                             result = rag_agent.add_documents_to_vectorstore(
                                 all_documents, incremental=True)
 
                             if result['added_files'] > 0 or result['updated_files'] > 0:
                                 logger.info(
-                                    f"增量更新完成: "
+                                    f"   ✓ 增量更新完成: "
                                     f"新增 {result['added_files']} 个文件, "
                                     f"更新 {result['updated_files']} 个文件, "
                                     f"添加 {result['added_chunks']} 个文档块, "
                                     f"删除 {result['deleted_chunks']} 个旧文档块")
                             else:
-                                logger.info("没有新文档或更新的文档需要添加")
+                                logger.info("   ℹ️  没有新文档或更新的文档需要添加")
                     except DocumentLoadError as e:
-                        logger.warning(f"加载新文档时出错: {e}")
+                        logger.warning(f"   ⚠️  加载新文档时出错: {e}")
                     except VectorStoreError as e:
-                        logger.error(f"添加新文档到向量存储失败: {e}", exc_info=True)
+                        logger.error(f"   ❌ 添加新文档到向量存储失败: {e}", exc_info=True)
 
             except VectorStoreError as e:
-                logger.error(f"加载向量存储失败: {e}", exc_info=True)
+                logger.error(f"   ❌ 加载向量存储失败: {e}", exc_info=True)
                 return False
 
         # 创建问答链
+        logger.info("🔗 步骤 4/5: 创建问答链...")
         rag_agent.create_qa_chain()
-        logger.info("RAG Agent 初始化成功")
+        logger.info("   ✓ 问答链创建成功")
+        
+        logger.info("✅ 步骤 5/5: RAG Agent 初始化完成！")
+        logger.info("=" * 60)
+        _startup_complete = True
         return True
 
     except Exception as e:
-        logger.error(f"初始化 RAG Agent 失败: {e}", exc_info=True)
+        logger.error(f"❌ 初始化 RAG Agent 失败: {e}", exc_info=True)
+        logger.error("=" * 60)
+        global _startup_failed
+        _startup_failed = True
         return False
     finally:
         _initialization_lock = False
@@ -337,10 +397,10 @@ async def start():
     聊天开始时初始化 RAG Agent
     使用全局变量缓存，避免重复初始化
     """
-    global rag_agent
+    global rag_agent, _startup_complete, _startup_failed, _startup_task
 
     # 如果 Agent 已经初始化，直接使用（避免重复初始化）
-    if rag_agent is not None and rag_agent.qa_chain is not None:
+    if rag_agent is not None and rag_agent.qa_chain is not None and _startup_complete:
         logger.info("RAG Agent 已存在，复用现有实例")
         await cl.Message(
             content=
@@ -348,27 +408,49 @@ async def start():
             author="System").send()
         return
 
-    # 尝试初始化（使用统一的初始化函数）
-    init_msg = await cl.Message(content="🔄 正在初始化 RAG Agent...",
-                                author="System").send()
+    # 如果后台初始化任务还在运行，等待它完成
+    if not _startup_complete and not _startup_failed:
+        # 启动后台初始化任务（如果还没启动）
+        if _startup_task is None:
+            _startup_task = asyncio.create_task(startup_initialization())
+        
+        # 等待初始化完成（最多等待30秒）
+        for _ in range(60):  # 30秒 = 60 * 0.5秒
+            await asyncio.sleep(0.5)
+            if _startup_complete:
+                break
+            if _startup_failed:
+                break
 
-    # 使用统一的初始化函数
-    success = await initialize_rag_agent()
+    # 如果后台初始化失败或未完成，尝试在前台初始化
+    if not _startup_complete:
+        # 尝试初始化（使用统一的初始化函数）
+        init_msg = await cl.Message(content="🔄 正在初始化 RAG Agent...",
+                                    author="System").send()
 
-    if success:
-        init_msg.content = "✅ RAG Agent 已就绪！\n\n你可以开始提问了，我会基于你的文档回答问题。\n\n💡 提示：\n- 直接输入问题开始对话\n- 拖拽文件上传新文档"
-        await init_msg.update()
-    else:
-        # 检查具体失败原因，提供更友好的提示
-        config = RAGConfig()  # 自动从环境变量读取
-        docs_dir = "./documents"
-        vectorstore_exists = os.path.exists(config.persist_directory)
+        # 使用统一的初始化函数
+        success = await initialize_rag_agent()
 
-        if not vectorstore_exists:
-            if not os.path.exists(docs_dir):
-                init_msg.content = f"❌ 文档目录不存在: {docs_dir}\n\n请创建目录并添加文档后刷新页面。"
-            else:
-                init_msg.content = f"❌ 向量存储未创建\n\n请在 {docs_dir} 目录中添加 PDF 或 TXT 格式的文档，然后刷新页面。"
+        if success:
+            init_msg.content = "✅ RAG Agent 已就绪！\n\n你可以开始提问了，我会基于你的文档回答问题。\n\n💡 提示：\n- 直接输入问题开始对话\n- 拖拽文件上传新文档"
+            await init_msg.update()
         else:
-            init_msg.content = "❌ 向量存储加载失败\n\n请检查日志获取详细信息，或删除向量存储目录后重新创建。"
-        await init_msg.update()
+            # 检查具体失败原因，提供更友好的提示
+            config = RAGConfig()  # 自动从环境变量读取
+            docs_dir = "./documents"
+            vectorstore_exists = os.path.exists(config.persist_directory)
+
+            if not vectorstore_exists:
+                if not os.path.exists(docs_dir):
+                    init_msg.content = f"❌ 文档目录不存在: {docs_dir}\n\n请创建目录并添加文档后刷新页面。"
+                else:
+                    init_msg.content = f"❌ 向量存储未创建\n\n请在 {docs_dir} 目录中添加 PDF 或 TXT 格式的文档，然后刷新页面。"
+            else:
+                init_msg.content = "❌ 向量存储加载失败\n\n请检查日志获取详细信息，或删除向量存储目录后重新创建。"
+            await init_msg.update()
+    else:
+        # 后台初始化成功，直接显示就绪消息
+        await cl.Message(
+            content=
+            "✅ RAG Agent 已就绪！\n\n你可以开始提问了，我会基于你的文档回答问题。\n\n💡 提示：\n- 直接输入问题开始对话\n- 拖拽文件上传新文档",
+            author="System").send()
